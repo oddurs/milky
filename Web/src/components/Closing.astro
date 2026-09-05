@@ -1,4 +1,5 @@
 ---
+import { repo, releases } from '../site';
 ---
 
 <section class="closing" id="download">
@@ -9,8 +10,8 @@
       Milky never asks again.
     </p>
     <div class="actions">
-      <a class="btn btn-primary" href="#download">Download for Mac</a>
-      <a class="btn btn-quiet" href="#download">Build from source</a>
+      <a class="btn btn-primary" href={releases}>Download for Mac</a>
+      <a class="btn btn-quiet" href={repo}>Build from source</a>
     </div>
     <p class="requirement">Requires macOS 14 or later.</p>
   </div>

@@ -9,10 +9,13 @@ interface Props {
 
 const { title, description } = Astro.props;
 
-// Scrapers want an absolute URL. Set `site` in astro.config.mjs once the domain
-// is known and this upgrades itself; until then a relative path is the honest
-// answer rather than a made-up origin.
-const ogImage = Astro.site ? new URL('/og.png', Astro.site).href : '/og.png';
+// Scrapers want an absolute URL, and GitHub Pages puts the site under /milky,
+// so both the origin and the base path have to be honoured.
+// BASE_URL carries no trailing slash here, so join deliberately rather than
+// concatenating — '/milky' + 'og.png' silently becomes '/milkyog.png'.
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+const asset = (path: string) => `${base}/${path}`;
+const ogImage = Astro.site ? new URL(asset('og.png'), Astro.site).href : asset('og.png');
 ---
 
 <!doctype html>
@@ -22,7 +25,7 @@ const ogImage = Astro.site ? new URL('/og.png', Astro.site).href : '/og.png';
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
     <meta name="description" content={description} />
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href={asset('favicon.svg')} type="image/svg+xml" />
     <meta name="color-scheme" content="light dark" />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
