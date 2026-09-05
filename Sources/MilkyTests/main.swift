@@ -1,0 +1,259 @@
+import Foundation
+import MilkyCore
+import MilkyStorage
+
+let t = Harness()
+
+// MARK: - Tokenizer helpers
+
+func kinds(_ text: String) -> [TokenKind] { MarkdownSyntax.tokenize(text).map(\.kind) }
+
+func span(_ text: String, _ kind: TokenKind, _ role: TokenRole) -> String? {
+    guard let token = MarkdownSyntax.tokenize(text).first(where: { $0.kind == kind && $0.role == role })
+    else { return nil }
+    return (text as NSString).substring(with: token.range)
+}
+
+func hasHeading(_ text: String) -> Bool {
+    kinds(text).contains { if case .heading = $0 { return true }; return false }
+}
+
+// MARK: - Tokenizer
+
+t.suite("headings") {
+    t.equal(span("## Vertical rhythm", .heading(level: 2), .marker), "## ", "marker")
+    t.equal(span("## Vertical rhythm", .heading(level: 2), .content), "Vertical rhythm", "content")
+    t.expect(kinds("###### deep").contains(.heading(level: 6)), "six hashes is a level-6 heading")
+    t.expect(!hasHeading("#tag"), "'#tag' without a space is a tag, not a heading")
+    t.expect(hasHeading("  ## indented"), "leading whitespace still yields a heading")
+}
+
+t.suite("inline emphasis") {
+    t.equal(span("a **bold** b", .bold, .content), "bold", "bold")
+    t.equal(span("a *thin* b", .italic, .content), "thin", "italic")
+    t.equal(span("a ***both*** b", .boldItalic, .content), "both", "bold italic")
+    t.equal(span("a ~~gone~~ b", .strikethrough, .content), "gone", "strikethrough")
+    t.equal(span("a `code` b", .inlineCode, .content), "code", "inline code")
+    t.expect(span("call some_long_name here", .italic, .content) == nil,
+             "underscores inside a word are not emphasis")
+}
+
+t.suite("code fences") {
+    let text = "before\n```swift\n# not a heading\n**not bold**\n```\nafter"
+    let all = kinds(text)
+    t.expect(all.contains(.codeBlock), "fenced lines are code")
+    t.expect(!all.contains(.bold), "emphasis inside a fence is not parsed")
+    t.expect(!hasHeading(text), "headings inside a fence are not parsed")
+}
+
+t.suite("lists and tasks") {
+    t.expect(kinds("- [ ] open").contains(.taskOpen), "unchecked task")
+    t.expect(kinds("- [x] done").contains(.taskDone), "checked task")
+    t.expect(kinds("- [X] done").contains(.taskDone), "uppercase X is checked")
+    t.expect(kinds("- plain").contains(.listBullet), "plain bullet")
+    t.expect(!kinds("- plain").contains(.taskOpen), "a plain bullet is not a task")
+    t.expect(kinds("3. numbered").contains(.listNumber), "ordered list")
+}
+
+t.suite("links") {
+    let tokens = MarkdownSyntax.tokenize("see [the docs](https://example.com) now")
+    t.equal(tokens.first { $0.kind == .link && $0.role == .content }?.payload,
+            "https://example.com", "link destination")
+    t.equal(span("see [the docs](https://example.com) now", .link, .content), "the docs", "link label")
+
+    t.equal(MarkdownSyntax.tokenize("[[Reading]]").first { $0.kind == .wikiLink && $0.role == .content }?.payload,
+            "Reading", "wiki target")
+    t.equal(MarkdownSyntax.tokenize("[[Reading|see this]]").first { $0.kind == .wikiLink && $0.role == .content }?.payload,
+            "Reading", "aliased wiki target")
+    t.equal(span("[[Reading|see this]]", .wikiLink, .content), "see this", "aliased wiki label")
+    t.expect(kinds("visit https://example.com now").contains(.link), "bare URL")
+}
+
+t.suite("frontmatter and rules") {
+    t.expect(kinds("---\ntitle: x\n---\nbody").contains(.frontmatter), "frontmatter at the top")
+    t.expect(kinds("body\n\n---\n\nmore").contains(.horizontalRule), "'---' lower down is a rule")
+}
+
+t.suite("tags") {
+    let payloads = MarkdownSyntax.tokenize("note #design and #a/b")
+        .filter { $0.kind == .tag }.compactMap(\.payload).sorted()
+    t.equal(payloads, ["a/b", "design"], "tag payloads")
+    t.expect(!kinds("# Heading").contains(.tag), "a heading is not a tag")
+}
+
+t.suite("ranges stay in bounds") {
+    let text = """
+    ---
+    title: Fixture
+    ---
+    # Heading with **bold**
+    - [x] done `code` [[link]] #tag
+    > quote with [a](b)
+    ```
+    fenced
+    ```
+    """
+    let length = (text as NSString).length
+    var valid = true
+    for token in MarkdownSyntax.tokenize(text) where token.range.location < 0 || NSMaxRange(token.range) > length {
+        valid = false
+    }
+    t.expect(valid, "every token range lies inside the document")
+    t.expect(MarkdownSyntax.tokenize("").isEmpty, "an empty document yields no tokens")
+    t.expect(MarkdownSyntax.tokenize("\n\n\n").allSatisfy { NSMaxRange($0.range) <= 3 },
+             "a document of only newlines is safe")
+}
+
+// MARK: - Note
+
+func fixture(_ text: String, name: String = "Example") -> Note {
+    Note(url: URL(fileURLWithPath: "/tmp/\(name).md"), relativePath: "\(name).md",
+         folder: "", text: text, modified: Date(), created: Date())
+}
+
+t.suite("note") {
+    t.equal(fixture("# Something else").title, "Example", "title comes from the filename")
+    t.equal(fixture("# Heading\n\nThe **real** line.").snippet, "Heading", "snippet uses the first prose line")
+    t.equal(fixture("\n\n- a list *item*").snippet, "a list item", "snippet strips markdown")
+    t.equal(fixture("```\ncode\n```\nprose").snippet, "prose", "snippet skips code blocks")
+    t.equal(fixture("").snippet, "", "empty note has an empty snippet")
+    t.equal(fixture("see [[One]] and [[Two|alias]]").outboundLinks, ["One", "Two"], "outbound links")
+    t.equal(fixture("#alpha #beta").tags, ["alpha", "beta"], "tags")
+}
+
+// MARK: - Vault
+
+t.suite("vault") {
+    let root = URL(fileURLWithPath: NSTemporaryDirectory())
+        .appending(path: "milky-tests-\(ProcessInfo.processInfo.processIdentifier)")
+    try? FileManager.default.removeItem(at: root)
+    try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+    defer { try? FileManager.default.removeItem(at: root) }
+
+    let vault = Vault(root: root)
+
+    let first = try vault.createNote(title: "First Note", body: "Hello #world")
+    t.equal(first.title, "First Note", "created note keeps its title")
+    t.equal(first.relativePath, "First Note.md", "created note sits at the vault root")
+
+    // A second note with the same title must not overwrite the first.
+    let clash = try vault.createNote(title: "First Note", body: "other")
+    t.equal(clash.title, "First Note 2", "duplicate titles are disambiguated")
+    t.equal(try String(contentsOf: first.url, encoding: .utf8), "Hello #world", "the original survived")
+
+    let nested = try vault.createNote(title: "Deep", in: "Projects/Alpha", body: "x")
+    t.equal(nested.relativePath, "Projects/Alpha/Deep.md", "notes can be created in nested folders")
+
+    vault.reload()
+    t.equal(vault.notes.count, 3, "all three notes are indexed")
+    t.equal(vault.folders().sorted(), ["Projects", "Projects/Alpha"], "folders are discovered recursively")
+
+    let renamed = try vault.rename(first, to: "Renamed")
+    t.equal(renamed.title, "Renamed", "rename changes the title")
+    t.expect(FileManager.default.fileExists(atPath: renamed.url.path), "renamed file exists")
+    t.expect(!FileManager.default.fileExists(atPath: first.url.path), "old filename is gone")
+
+    let moved = try vault.move(renamed, toFolder: "Projects")
+    t.equal(moved.folder, "Projects", "move updates the folder")
+    t.equal(moved.relativePath, "Projects/Renamed.md", "move updates the relative path")
+
+    try vault.write("edited body", to: moved.url)
+    t.equal(try String(contentsOf: moved.url, encoding: .utf8), "edited body", "write persists")
+
+    // Filenames double as titles, so only filesystem-hostile characters are replaced.
+    // ':' is replaced too: the filesystem tolerates it, but Finder renders it as '/'.
+    t.equal(Vault.sanitize("  Trip: Paris/Rome  "), "Trip- Paris-Rome", "sanitize replaces path-hostile characters")
+    t.equal(Vault.sanitize("Meeting notes"), "Meeting notes", "ordinary titles are untouched")
+    t.equal(Vault.sanitize("a\nb"), "a-b", "newlines are replaced")
+
+    vault.reload()
+    let indexed = vault.notes.first { $0.relativePath == "Projects/Renamed.md" }
+    t.expect(indexed != nil, "the moved note is re-indexed at its new path")
+
+    // A hidden directory must not be walked.
+    let hidden = root.appending(path: ".git")
+    try FileManager.default.createDirectory(at: hidden, withIntermediateDirectories: true)
+    try "ignored".write(to: hidden.appending(path: "Note.md"), atomically: true, encoding: .utf8)
+    vault.reload()
+    t.expect(!vault.notes.contains { $0.relativePath.contains(".git") }, "the .git directory is skipped")
+}
+
+t.suite("vault kinds") {
+    t.equal(VaultLocations.kind(of: URL(fileURLWithPath: "/Users/x/Dropbox/Notes")), .dropbox, "dropbox path")
+    t.equal(VaultLocations.kind(of: URL(fileURLWithPath:
+        "/Users/x/Library/Mobile Documents/com~apple~CloudDocs/Notes")), .iCloud, "icloud path")
+    t.equal(VaultLocations.kind(of: URL(fileURLWithPath: "/Users/x/Notes")), .local, "plain folder")
+}
+
+t.suite("git sync") {
+    let sandbox = URL(fileURLWithPath: NSTemporaryDirectory())
+        .appending(path: "milky-git-\(ProcessInfo.processInfo.processIdentifier)")
+    try? FileManager.default.removeItem(at: sandbox)
+    try FileManager.default.createDirectory(at: sandbox, withIntermediateDirectories: true)
+    defer { try? FileManager.default.removeItem(at: sandbox) }
+
+    let remote = sandbox.appending(path: "remote.git")
+    let working = sandbox.appending(path: "vault")
+
+    @discardableResult
+    func git(_ args: [String], in directory: URL) -> Int32 {
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/git")
+        process.arguments = args
+        process.currentDirectoryURL = directory
+        process.standardOutput = Pipe()
+        process.standardError = Pipe()
+        var env = ProcessInfo.processInfo.environment
+        env["GIT_TERMINAL_PROMPT"] = "0"
+        // Commits must not depend on the machine's global git identity.
+        env["GIT_AUTHOR_NAME"] = "Milky Tests"; env["GIT_AUTHOR_EMAIL"] = "tests@milky.local"
+        env["GIT_COMMITTER_NAME"] = "Milky Tests"; env["GIT_COMMITTER_EMAIL"] = "tests@milky.local"
+        process.environment = env
+        try? process.run()
+        process.waitUntilExit()
+        return process.terminationStatus
+    }
+
+    let sync = GitSync(root: working)
+    guard sync.isAvailable else {
+        t.expect(true, "git is unavailable on this machine; sync checks skipped")
+        return
+    }
+
+    // A folder that isn't a repository reports so rather than throwing.
+    try FileManager.default.createDirectory(at: working, withIntermediateDirectories: true)
+    t.expect(!GitSync(root: working).status().isRepository, "a plain folder is not a repository")
+
+    git(["init", "--bare", "-b", "main", remote.path], in: sandbox)
+    git(["init", "-b", "main"], in: working)
+    git(["remote", "add", "origin", remote.path], in: working)
+
+    let vault = Vault(root: working)
+    _ = try vault.createNote(title: "Synced", body: "first version")
+
+    var status = GitSync(root: working).status()
+    t.expect(status.isRepository, "the vault is now a repository")
+    t.expect(status.dirtyCount > 0, "the new note shows as an uncommitted change")
+
+    git(["add", "-A"], in: working)
+    git(["commit", "-m", "seed"], in: working)
+    git(["push", "-u", "origin", "main"], in: working)
+
+    // The real path under test: edit, then sync.
+    try vault.write("second version", to: working.appending(path: "Synced.md"))
+    status = try GitSync(root: working).sync(message: "test sync")
+    t.equal(status.dirtyCount, 0, "sync commits every local change")
+    t.equal(status.ahead, 0, "sync pushes the commit to the remote")
+
+    // Prove it truly reached the remote by cloning it fresh.
+    let clone = sandbox.appending(path: "clone")
+    git(["clone", remote.path, clone.path], in: sandbox)
+    let round = try? String(contentsOf: clone.appending(path: "Synced.md"), encoding: .utf8)
+    t.equal(round, "second version", "the edit round-trips through the remote")
+
+    // A clean vault syncs without error and stays clean.
+    let unchanged = try GitSync(root: working).sync()
+    t.equal(unchanged.dirtyCount, 0, "syncing a clean vault is a no-op")
+}
+
+t.finish()

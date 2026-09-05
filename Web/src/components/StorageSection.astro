@@ -1,0 +1,57 @@
+---
+const stores = [
+  { name: 'On My Mac', detail: 'Any folder on the disk.' },
+  { name: 'iCloud Drive', detail: 'A folder the system syncs for you, including to your iPhone.' },
+  { name: 'Dropbox', detail: 'A folder Dropbox syncs for you.' },
+];
+---
+
+<section class="section" id="storage">
+  <div class="wrap">
+    <h2><span class="hash">##</span>Your notes are a folder</h2>
+    <p>
+      There is no database and no account. Each note is a <code>.md</code> file whose
+      filename is its title. Open the same folder in Obsidian, in TextEdit, or over SSH
+      and everything still works — and if you stop using Milky, there is nothing to export.
+    </p>
+    <p>
+      Every storage option below is the same mechanism, which is why none of them ask you
+      to sign in. They are all just directories; something else already keeps them in sync.
+    </p>
+
+    <dl class="stores">
+      {stores.map(({ name, detail }) => (
+        <div class="store">
+          <dt>{name}</dt>
+          <dd>{detail}</dd>
+        </div>
+      ))}
+      <div class="store">
+        <dt>Git repository</dt>
+        <dd>
+          A folder that happens to be a clone. Syncing commits your edits, rebases on the
+          remote, and pushes — using your own <code>git</code>, your own keys, and your own
+          remote. Milky never sees any of it.
+        </dd>
+      </div>
+    </dl>
+  </div>
+</section>
+
+<style>
+  .stores { margin: 30px 0 0; max-width: 42em; border-top: 1px solid var(--rule); }
+  .store {
+    display: grid;
+    grid-template-columns: 11.5em 1fr;
+    gap: 4px 24px;
+    padding: 17px 0;
+    border-bottom: 1px solid var(--rule);
+    align-items: baseline;
+  }
+  .store dt { font-weight: 600; letter-spacing: -0.008em; }
+  .store dd { margin: 0; color: var(--ink-soft); font-size: 15.5px; }
+
+  @media (max-width: 720px) {
+    .store { grid-template-columns: 1fr; gap: 2px; }
+  }
+</style>

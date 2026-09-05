@@ -1,0 +1,366 @@
+---
+// A DOM reconstruction of Milky's macOS window rather than a screenshot: it stays
+// crisp at any resolution, follows the reader's theme, and renders the sidebar's
+// Liquid Glass content that a real capture cannot.
+const folders = [
+  { name: 'Journal', count: 1 },
+  { name: 'Projects', count: 1 },
+];
+
+const tags = [
+  { name: 'design', count: 1 },
+  { name: 'reading', count: 1 },
+  { name: 'typography', count: 1 },
+];
+
+const notes = [
+  { title: 'Typography', time: '01:53', snippet: 'Notes about setting text well, and why…', selected: true },
+  { title: '2026-09-05', time: '01:25', snippet: 'Cold morning. Started the editor rewrite…' },
+  { title: 'Milky', time: '01:25', snippet: 'Building a markdown notes app that feels…' },
+  { title: 'Reading', time: '01:25', snippet: 'On reading' },
+];
+---
+
+<div class="window">
+  <div class="titlebar">
+    <span class="light r"></span>
+    <span class="light y"></span>
+    <span class="light g"></span>
+    <span class="search">
+      <svg width="11" height="11" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+        <circle cx="7" cy="7" r="4.6" stroke="currentColor" stroke-width="1.6"></circle>
+        <path d="M10.6 10.6 14 14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></path>
+      </svg>
+      Search
+    </span>
+    <span class="compose">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+        <path d="M11.2 1.9 14.1 4.8 5.6 13.3 2 14l.7-3.6 8.5-8.5Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"></path>
+      </svg>
+    </span>
+  </div>
+
+  <aside class="side">
+    <div class="side-head">Notes</div>
+    <div class="side-row sel">
+      <span class="ic">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <rect x="2.2" y="1.8" width="11.6" height="12.4" rx="2" stroke="currentColor" stroke-width="1.5"></rect>
+          <path d="M4.8 5.4h6.4M4.8 8h6.4M4.8 10.6h4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"></path>
+        </svg>
+      </span>
+      All Notes<span class="count">4</span>
+    </div>
+
+    <div class="side-head">Folders</div>
+    {folders.map(({ name, count }) => (
+      <div class="side-row">
+        <span class="ic">
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path d="M1.9 4.3c0-.8.6-1.4 1.4-1.4h2.3l1.4 1.6h5.7c.8 0 1.4.6 1.4 1.4v5.8c0 .8-.6 1.4-1.4 1.4H3.3c-.8 0-1.4-.6-1.4-1.4V4.3Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"></path>
+          </svg>
+        </span>
+        {name}<span class="count">{count}</span>
+      </div>
+    ))}
+
+    <div class="side-head">Tags</div>
+    {tags.map(({ name, count }) => (
+      <div class="side-row"><span class="ic">#</span>{name}<span class="count">{count}</span></div>
+    ))}
+
+    <div class="side-foot">
+      <svg width="11" height="11" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+        <circle cx="4" cy="3.4" r="1.8" stroke="currentColor" stroke-width="1.4"></circle>
+        <circle cx="4" cy="12.6" r="1.8" stroke="currentColor" stroke-width="1.4"></circle>
+        <circle cx="12" cy="6.4" r="1.8" stroke="currentColor" stroke-width="1.4"></circle>
+        <path d="M4 5.2v5.6M5.8 3.4h3.4c1.5 0 2.8 1.2 2.8 2.8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"></path>
+      </svg>
+      main
+    </div>
+  </aside>
+
+  <div class="list">
+    {notes.map(({ title, time, snippet, selected }) => (
+      <div class:list={['note', { sel: selected }]}>
+        <span class="t">{title}</span>
+        <span class="m">{time} <span class="s">{snippet}</span></span>
+      </div>
+    ))}
+  </div>
+
+  <div class="editor">
+    <div class="doc-head">
+      <div class="doc-title">Typography</div>
+      <div class="doc-date">5 September at 01:53</div>
+    </div>
+
+    <div class="doc" id="doc">
+      <p class="ln">Notes about setting text well, and why it matters more than people think.<span class="caret"></span></p>
+
+      <p class="ln h2"><span class="syn">## </span>The measure<span class="caret"></span></p>
+      <p class="ln">A line of text wants to be about <span class="syn">**</span><b>66 characters</b><span class="syn">**</span> long. Much shorter and the eye snaps back too often.<span class="caret"></span></p>
+
+      <p class="ln h2"><span class="syn">## </span>Vertical rhythm<span class="caret"></span></p>
+      <p class="ln li"><span class="bullet"></span>Line height around 1.4–1.5× the type size<span class="caret"></span></p>
+      <p class="ln li"><span class="bullet"></span>Paragraph spacing <span class="syn">*</span><i>smaller</i><span class="syn">*</span> than a full blank line<span class="caret"></span></p>
+      <p class="ln li"><span class="box"></span>Test the scale at 12pt and at 24pt<span class="caret"></span></p>
+      <p class="ln li done"><span class="box checked"></span><s>Pick a serif that ships with the OS</s><span class="caret"></span></p>
+
+      <p class="ln quote gap"><span class="syn">&gt; </span>Typography is what language looks like.<span class="caret"></span></p>
+
+      <p class="ln gap">Some <span class="syn">`</span><code>inline code</code><span class="syn">`</span>, a <span class="syn">[</span><a href="#editor">specimen link</a><span class="syn">](apple.com/fonts)</span><span class="caret"></span></p>
+
+      <hr class="rule-line" />
+
+      <p class="ln">Related: <span class="syn">[[</span><a href="#editor">Reading</a><span class="syn">]]</span> and <span class="tag">#design</span><span class="caret"></span></p>
+    </div>
+
+    <div class="doc-foot"><span>132 words</span><span>Typography.md</span></div>
+  </div>
+</div>
+
+<style>
+  .window {
+    --w-font: clamp(9.4px, 1.02vw, 13px);
+    font-size: var(--w-font);
+    background: var(--win-bg);
+    border: 1px solid var(--win-rule);
+    border-radius: 11px;
+    box-shadow: var(--win-shadow);
+    overflow: hidden;
+    display: grid;
+    grid-template-columns: 15.5em 20.5em 1fr;
+    grid-template-rows: auto 1fr;
+    height: 45em;
+    user-select: none;
+  }
+
+  .titlebar {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    gap: .6em;
+    height: 3.1em;
+    padding: 0 1.1em;
+    background: var(--win-side);
+    border-bottom: 1px solid var(--win-rule);
+  }
+  .light { width: .95em; height: .95em; border-radius: 50%; flex: none; }
+  .light.r { background: #FF5F57; }
+  .light.y { background: #FEBC2E; }
+  .light.g { background: #28C840; }
+
+  .search {
+    margin-left: auto;
+    width: 15em;
+    height: 1.9em;
+    border-radius: .45em;
+    background: var(--code-bg);
+    display: flex;
+    align-items: center;
+    padding: 0 .6em;
+    gap: .4em;
+    color: var(--ink-faint);
+    font-size: .92em;
+  }
+  .compose { color: var(--ink-soft); display: flex; align-items: center; margin-left: .9em; }
+
+  /* Sidebar */
+  .side {
+    background: var(--win-side);
+    border-right: 1px solid var(--win-rule);
+    padding: .9em .7em;
+    display: flex;
+    flex-direction: column;
+    gap: .15em;
+    overflow: hidden;
+  }
+
+  .side-head {
+    padding: .9em .6em .35em;
+    font-size: .86em;
+    font-weight: 600;
+    color: var(--ink-faint);
+    letter-spacing: 0.01em;
+  }
+  .side-head:first-child { padding-top: .2em; }
+
+  .side-row {
+    display: flex;
+    align-items: center;
+    gap: .55em;
+    padding: .42em .6em;
+    border-radius: .45em;
+    color: var(--ink);
+  }
+  .side-row .ic { color: var(--accent); display: flex; flex: none; }
+  .side-row .count {
+    margin-left: auto;
+    color: var(--ink-faint);
+    font-variant-numeric: tabular-nums;
+    font-size: .92em;
+  }
+  .side-row.sel { background: var(--rule-soft); }
+
+  .side-foot {
+    margin-top: auto;
+    padding: .7em .6em .1em;
+    border-top: 1px solid var(--win-rule);
+    display: flex;
+    align-items: center;
+    gap: .4em;
+    color: var(--ink-soft);
+    font-size: .88em;
+  }
+
+  /* Note list */
+  .list {
+    background: var(--win-list);
+    border-right: 1px solid var(--win-rule);
+    padding: .7em .55em;
+    overflow: hidden;
+  }
+
+  .note {
+    padding: .62em .7em;
+    border-radius: .55em;
+    display: flex;
+    flex-direction: column;
+    gap: .12em;
+  }
+  .note .t { font-weight: 600; letter-spacing: -0.004em; }
+  .note .m { display: flex; gap: .5em; color: var(--ink-soft); font-size: .93em; font-variant-numeric: tabular-nums; }
+  .note .m .s { color: var(--ink-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  /* On the yellow selection the text goes dark in both themes — white on yellow
+     fails contrast either way. */
+  .note.sel { background: var(--accent); }
+  .note.sel .t { color: rgba(0, 0, 0, .88); }
+  .note.sel .m { color: rgba(0, 0, 0, .7); }
+  .note.sel .m .s { color: rgba(0, 0, 0, .52); }
+
+  /* Editor */
+  .editor { display: flex; flex-direction: column; overflow: hidden; }
+
+  .doc-head { padding: 1.5em 2.4em .2em; }
+  .doc-title { font-size: 1.62em; font-weight: 700; letter-spacing: -0.02em; }
+  .doc-date { color: var(--ink-faint); font-size: .88em; margin-top: .1em; }
+
+  .doc {
+    flex: 1;
+    padding: 1.6em 2.4em;
+    overflow: hidden;
+    font-size: 1.15em;
+    line-height: 1.45;
+    /* Whatever the viewport does to the line count, the cut reads as "the note
+       continues" rather than as a broken layout. */
+    --fade: linear-gradient(to bottom, #000 calc(100% - 2.4em), transparent 100%);
+    -webkit-mask-image: var(--fade);
+    mask-image: var(--fade);
+  }
+
+  .ln {
+    margin: 0;
+    padding: .06em 0;
+    position: relative;
+    cursor: text;
+    border-radius: 3px;
+  }
+  .ln + .ln { margin-top: var(--ln-gap, .05em); }
+  .ln.gap { --ln-gap: .82em; }
+
+  .syn {
+    color: var(--ink-faint);
+    opacity: .5;
+    transition: opacity .16s ease, color .16s ease;
+  }
+  .doc.reveal .syn,
+  .ln.on .syn { opacity: 1; color: var(--ink-soft); }
+
+  /* The caret ships in the markup rather than being created on click, so a
+     scoped stylesheet still reaches it. */
+  .caret {
+    display: none;
+    width: 1.5px;
+    height: 1.05em;
+    margin-left: 1px;
+    vertical-align: -0.18em;
+    background: var(--accent);
+  }
+  .ln.on .caret { display: inline-block; animation: blink 1.06s steps(1) infinite; }
+  @keyframes blink { 0%, 50% { opacity: 1; } 50.01%, 100% { opacity: 0; } }
+
+  .ln.h2 { font-size: 1.32em; font-weight: 700; letter-spacing: -0.018em; --ln-gap: .92em; }
+  .ln.h2 .syn { font-size: .58em; font-weight: 600; vertical-align: .16em; }
+
+  .li { padding-left: 1.55em; }
+  .li .bullet, .li .box { position: absolute; left: .1em; top: .58em; flex: none; }
+  .li .bullet {
+    width: .34em; height: .34em;
+    border-radius: 50%;
+    background: var(--ink-soft);
+    top: .68em;
+    left: .22em;
+  }
+  .li .box { width: .82em; height: .82em; border-radius: 50%; border: 1.4px solid var(--ink-faint); }
+  .li .box.checked { border-color: var(--accent); background: var(--accent); }
+  .li .box.checked::after {
+    content: "";
+    position: absolute;
+    left: .21em; top: .28em;
+    width: .34em; height: .17em;
+    border-left: 1.6px solid #fff;
+    border-bottom: 1.6px solid #fff;
+    transform: rotate(-45deg);
+  }
+  .li.done { color: var(--ink-soft); }
+  .li.done s { text-decoration-color: var(--ink-faint); }
+
+  .quote {
+    padding-left: 1.3em;
+    color: var(--ink-soft);
+    font-family: ui-serif, "New York", Georgia, "Times New Roman", serif;
+    font-style: italic;
+    font-size: 1.02em;
+  }
+  .quote::before {
+    content: "";
+    position: absolute;
+    left: .1em; top: .2em; bottom: .2em;
+    width: 2.5px;
+    border-radius: 2px;
+    background: var(--win-rule);
+  }
+
+  .tag {
+    background: var(--tag-bg);
+    color: var(--tag-ink);
+    padding: .08em .42em;
+    border-radius: 980px;
+    font-weight: 500;
+  }
+
+  .rule-line { height: 1px; background: var(--win-rule); margin: .9em 0; border: 0; }
+
+  .doc-foot {
+    display: flex;
+    padding: .55em 1.4em;
+    border-top: 1px solid var(--win-rule);
+    color: var(--ink-faint);
+    font-size: .9em;
+  }
+  .doc-foot span:last-child { margin-left: auto; }
+
+  /* The window sheds columns the way the app itself does. */
+  @media (max-width: 1000px) {
+    .window { grid-template-columns: 18em 1fr; height: 38em; }
+    .side { display: none; }
+  }
+  @media (max-width: 720px) {
+    .window { grid-template-columns: 1fr; height: 34em; --w-font: 11px; }
+    .list { display: none; }
+    .doc-head { padding: 1.2em 1.4em .2em; }
+    .doc { padding: 1.2em 1.4em; }
+  }
+</style>

@@ -1,0 +1,74 @@
+---
+const habits = [
+  { lead: 'Return continues a list.', rest: 'Return on an empty item ends it.' },
+  { lead: 'The shortcuts you already know.', keys: true },
+  { lead: 'Wiki links go somewhere.', code: '[[a link]]', before: 'Click ', rest: ' to jump to that note, or to create it if it doesn’t exist yet.' },
+  { lead: 'Tags collect themselves.', code: '#tag', before: 'Any ', rest: ' you write appears in the sidebar.' },
+  { lead: 'Outside changes just appear.', code: 'git pull', before: 'A Dropbox sync, a ', rest: ', or an edit from another app shows up without a refresh.' },
+  { lead: 'Deleting is undoable.', rest: 'Notes go to the Finder trash, not the void.' },
+  { lead: 'Two reading faces.', rest: 'Set your notes in San Francisco or in New York, at whatever size you actually read at.' },
+];
+---
+
+<section class="section">
+  <div class="wrap">
+    <h2><span class="hash">##</span>It behaves the way Notes does</h2>
+
+    <ul class="habits">
+      {habits.map((habit) => (
+        <li>
+          <b>{habit.lead}</b>{' '}
+          {habit.keys ? (
+            <>
+              <kbd>⌘B</kbd>, <kbd>⌘I</kbd> and <kbd>⌘E</kbd> for emphasis, <kbd>⌃⌘1</kbd> and
+              <kbd>⌃⌘2</kbd> for headings, <kbd>⌘⇧L</kbd> for a checklist.
+            </>
+          ) : (
+            <>{habit.before}{habit.code && <code>{habit.code}</code>}{habit.rest}</>
+          )}
+        </li>
+      ))}
+    </ul>
+
+    <div class="unfinished">
+      <p>What isn't built yet</p>
+      <p>
+        The iPhone app. Milky's note model, markdown engine, and storage layer are already
+        free of Mac-only code so they can be shared with it, but today Milky is a Mac app
+        and nothing else.
+      </p>
+    </div>
+  </div>
+</section>
+
+<style>
+  .habits { margin: 26px 0 0; padding: 0; list-style: none; max-width: 42em; }
+  .habits li {
+    padding: 0 0 0 26px;
+    position: relative;
+    color: var(--ink-soft);
+    font-size: 16px;
+    text-wrap: pretty;
+  }
+  .habits li + li { margin-top: 15px; }
+  .habits li::before {
+    content: "";
+    position: absolute;
+    left: 4px;
+    top: .62em;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+  .habits b { color: var(--ink); font-weight: 600; }
+
+  .unfinished {
+    margin-top: 38px;
+    max-width: 34em;
+    padding-left: 20px;
+    border-left: 2px solid var(--rule);
+  }
+  .unfinished p { font-size: 15.5px; color: var(--ink-soft); max-width: none; }
+  .unfinished p:first-child { color: var(--ink); font-weight: 600; margin-bottom: .4em; }
+</style>

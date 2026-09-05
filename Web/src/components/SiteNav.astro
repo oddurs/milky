@@ -1,0 +1,74 @@
+---
+const links = [
+  { href: '#storage', label: 'Storage' },
+  { href: '#editor', label: 'Editor' },
+];
+---
+
+<header class="nav" id="nav">
+  <div class="nav-inner">
+    <a class="mark" href="#top"><span class="glass"></span>Milky</a>
+    <span class="nav-spacer"></span>
+    {links.map(({ href, label }) => <a class="nav-link" href={href}>{label}</a>)}
+    <a class="btn btn-quiet btn-sm" href="#download">Download</a>
+  </div>
+</header>
+
+<script is:inline>
+  // The nav earns its hairline only once the page has actually moved.
+  (() => {
+    const nav = document.getElementById('nav');
+    const onScroll = () => (nav.dataset.scrolled = window.scrollY > 4);
+    onScroll();
+    addEventListener('scroll', onScroll, { passive: true });
+  })();
+</script>
+
+<style>
+  .nav {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: color-mix(in srgb, var(--paper) 86%, transparent);
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    border-bottom: 1px solid transparent;
+    transition: border-color .2s ease;
+  }
+  .nav[data-scrolled="true"] { border-bottom-color: var(--rule-soft); }
+
+  .nav-inner {
+    max-width: 1120px;
+    margin-inline: auto;
+    padding-block: 13px;
+    padding-inline: clamp(20px, 4vw, 40px);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .mark {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: -0.012em;
+    color: var(--ink);
+  }
+  .mark:hover { text-decoration: none; }
+
+  .glass {
+    width: 17px;
+    height: 17px;
+    border-radius: 5px;
+    background: var(--accent);
+    box-shadow: inset 0 -5px 8px -4px rgba(0, 0, 0, .28);
+    flex: none;
+  }
+
+  .nav-spacer { flex: 1; }
+
+  .nav-link { font-size: 14px; color: var(--ink-soft); }
+  .nav-link:hover { color: var(--ink); text-decoration: none; }
+</style>

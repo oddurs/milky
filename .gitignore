@@ -1,0 +1,16 @@
+# Swift / SwiftPM
+.build/
+.swiftpm/
+build/
+
+# Astro / node
+Web/dist/
+Web/node_modules/
+Web/.astro/
+
+# Release artifacts
+release/
+
+# macOS
+.DS_Store
+*.xcuserstate

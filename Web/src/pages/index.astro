@@ -1,0 +1,27 @@
+---
+import Base from '../layouts/Base.astro';
+import SiteNav from '../components/SiteNav.astro';
+import Hero from '../components/Hero.astro';
+import ProductStage from '../components/ProductStage.astro';
+import StorageSection from '../components/StorageSection.astro';
+import EditorSection from '../components/EditorSection.astro';
+import HabitsSection from '../components/HabitsSection.astro';
+import Closing from '../components/Closing.astro';
+import SiteFooter from '../components/SiteFooter.astro';
+---
+
+<Base
+  title="Milky"
+  description="A markdown notes app for the Mac that looks like Apple Notes and stores everything as plain files in a folder you choose."
+>
+  <SiteNav />
+  <main id="top">
+    <Hero />
+    <ProductStage />
+    <StorageSection />
+    <EditorSection />
+    <HabitsSection />
+    <Closing />
+  </main>
+  <SiteFooter />
+</Base>
