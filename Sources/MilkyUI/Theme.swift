@@ -100,8 +100,17 @@ public struct Theme: Sendable {
 
     public var bodyFont: PlatformFont { font(size: bodySize) }
 
-    public func monoFont(size: CGFloat? = nil, weight: PlatformFont.Weight = .regular) -> PlatformFont {
-        PlatformFont.monospacedSystemFont(ofSize: size ?? bodySize * 0.93, weight: weight)
+    public func monoFont(size: CGFloat? = nil,
+                         weight: PlatformFont.Weight = .regular,
+                         italic: Bool = false) -> PlatformFont {
+        let base = PlatformFont.monospacedSystemFont(ofSize: size ?? bodySize * 0.93, weight: weight)
+        guard italic else { return base }
+        #if canImport(AppKit)
+        let descriptor = base.fontDescriptor.withSymbolicTraits(base.fontDescriptor.symbolicTraits.union(.italic))
+        return PlatformFont(descriptor: descriptor, size: base.pointSize) ?? base
+        #else
+        return base
+        #endif
     }
 
     #if canImport(AppKit)

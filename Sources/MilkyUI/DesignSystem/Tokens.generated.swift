@@ -124,6 +124,48 @@ public enum Ink {
             : NSColor(srgbRed: 0.2784, green: 0.349, blue: 0.0, alpha: 1.0)
     }
 
+    /// Syntax: declarations and control flow — the brand hue
+    public static let codeKeyword = NSColor(name: "codeKeyword") { appearance in
+        appearance.isDark
+            ? NSColor(srgbRed: 0.7843, green: 1.0, blue: 0.0, alpha: 1.0)
+            : NSColor(srgbRed: 0.2902, green: 0.3882, blue: 0.0, alpha: 1.0)
+    }
+
+    /// Syntax: strings and characters
+    public static let codeString = NSColor(name: "codeString") { appearance in
+        appearance.isDark
+            ? NSColor(srgbRed: 0.9098, green: 0.7216, blue: 0.4784, alpha: 1.0)
+            : NSColor(srgbRed: 0.5412, green: 0.3255, blue: 0.0, alpha: 1.0)
+    }
+
+    /// Syntax: numbers, booleans, nil
+    public static let codeNumber = NSColor(name: "codeNumber") { appearance in
+        appearance.isDark
+            ? NSColor(srgbRed: 0.7686, green: 0.651, blue: 1.0, alpha: 1.0)
+            : NSColor(srgbRed: 0.4157, green: 0.2039, blue: 0.7804, alpha: 1.0)
+    }
+
+    /// Syntax: type names
+    public static let codeType = NSColor(name: "codeType") { appearance in
+        appearance.isDark
+            ? NSColor(srgbRed: 0.4353, green: 0.8471, blue: 0.7843, alpha: 1.0)
+            : NSColor(srgbRed: 0.0431, green: 0.4196, blue: 0.3882, alpha: 1.0)
+    }
+
+    /// Syntax: comments, set italic
+    public static let codeComment = NSColor(name: "codeComment") { appearance in
+        appearance.isDark
+            ? NSColor(srgbRed: 0.5804, green: 0.5804, blue: 0.6196, alpha: 1.0)
+            : NSColor(srgbRed: 0.4275, green: 0.4275, blue: 0.4706, alpha: 1.0)
+    }
+
+    /// Syntax: operators and brackets
+    public static let codePunctuation = NSColor(name: "codePunctuation") { appearance in
+        appearance.isDark
+            ? NSColor(srgbRed: 0.5804, green: 0.5804, blue: 0.6196, alpha: 1.0)
+            : NSColor(srgbRed: 0.4235, green: 0.4235, blue: 0.4588, alpha: 1.0)
+    }
+
     /// Tag pill ground
     public static let tagSurface = NSColor(name: "tagSurface") { appearance in
         appearance.isDark
@@ -150,6 +192,12 @@ public enum Palette {
     public static var codeInk: Color { Color(nsColor: Ink.codeInk) }
     public static var codeSurface: Color { Color(nsColor: Ink.codeSurface) }
     public static var tagInk: Color { Color(nsColor: Ink.tagInk) }
+    public static var codeKeyword: Color { Color(nsColor: Ink.codeKeyword) }
+    public static var codeString: Color { Color(nsColor: Ink.codeString) }
+    public static var codeNumber: Color { Color(nsColor: Ink.codeNumber) }
+    public static var codeType: Color { Color(nsColor: Ink.codeType) }
+    public static var codeComment: Color { Color(nsColor: Ink.codeComment) }
+    public static var codePunctuation: Color { Color(nsColor: Ink.codePunctuation) }
     public static var tagSurface: Color { Color(nsColor: Ink.tagSurface) }
 }
 

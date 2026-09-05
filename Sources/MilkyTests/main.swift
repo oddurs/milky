@@ -185,6 +185,93 @@ t.suite("vault kinds") {
     t.equal(VaultLocations.kind(of: URL(fileURLWithPath: "/Users/x/Notes")), .local, "plain folder")
 }
 
+t.suite("gfm tables") {
+    let table = """
+    | Storage | What it is |
+    | --- | :---: |
+    | iCloud | A folder |
+    """
+    let found = kinds(table)
+    t.expect(found.contains(.tableCell(isHeader: true)), "header cells are marked")
+    t.expect(found.contains(.tableCell(isHeader: false)), "body cells are marked")
+    t.expect(found.contains(.tableDelimiter), "the delimiter row is punctuation")
+    t.expect(found.contains(.tablePipe), "pipes are punctuation")
+
+    let cells = MarkdownSyntax.tokenize(table)
+        .filter { if case .tableCell = $0.kind { return true }; return false }
+        .map { (table as NSString).substring(with: $0.range) }
+    t.equal(cells, ["Storage", "What it is", "iCloud", "A folder"], "cells are trimmed of padding")
+
+    // A pipe alone is not a table — the delimiter row is what proves it.
+    t.expect(!kinds("a | b\nc | d").contains(.tableDelimiter), "pipes without a delimiter row are prose")
+    t.expect(!kinds("a | b\nc | d").contains(.tableCell(isHeader: true)), "prose with pipes is not a table")
+
+    t.expect(MarkdownSyntax.isTableDelimiter("|---|:--:|---:|"), "every alignment marker parses")
+    t.expect(!MarkdownSyntax.isTableDelimiter("| a | b |"), "a content row is not a delimiter")
+
+    // Emphasis still applies inside a cell.
+    t.expect(kinds("| **bold** | x |\n| --- | --- |").contains(.bold), "inline markup works inside cells")
+}
+
+t.suite("fence language") {
+    let tokens = MarkdownSyntax.tokenize("```swift\nlet x = 1\n```")
+    let body = tokens.first { $0.kind == .codeBlock }
+    t.equal(body?.payload, "swift", "the info string reaches the code lines")
+    t.equal(MarkdownSyntax.tokenize("```\nplain\n```").first { $0.kind == .codeBlock }?.payload,
+            nil, "a bare fence carries no language")
+    t.equal(MarkdownSyntax.tokenize("```js title=\"a\"\nx\n```").first { $0.kind == .codeBlock }?.payload,
+            "js title=\"a\"", "the whole info string is preserved")
+}
+
+t.suite("hard breaks and footnotes") {
+    t.expect(kinds("line one  \nline two").contains(.hardBreak), "two trailing spaces")
+    t.expect(kinds("line one\\\nline two").contains(.hardBreak), "trailing backslash")
+    t.expect(!kinds("line one\nline two").contains(.hardBreak), "a plain newline is not a hard break")
+    t.expect(kinds("see [^1] here").contains(.footnoteRef), "footnote reference")
+    t.expect(kinds("[^1]: the note").contains(.footnoteDef), "footnote definition")
+}
+
+t.suite("syntax highlighting") {
+    func roles(_ code: String, _ info: String?) -> [CodeToken] {
+        CodeHighlighter.spans(in: code, info: info).map(\.token)
+    }
+    func text(_ code: String, _ info: String?, _ token: CodeToken) -> [String] {
+        let ns = code as NSString
+        return CodeHighlighter.spans(in: code, info: info)
+            .filter { $0.token == token }.map { ns.substring(with: $0.range) }
+    }
+
+    t.equal(text("let x = 1", "swift", .keyword), ["let"], "swift keyword")
+    t.equal(text("let x = 1", "swift", .number), ["1"], "number")
+    t.equal(text("let s = \"hi\"", "swift", .string), ["\"hi\""], "string")
+    t.equal(text("// a note\nlet x = 1", "swift", .comment), ["// a note"], "line comment")
+    t.equal(text("greet(name)", "swift", .function), ["greet"], "a name before ( is a call")
+    t.equal(text("let v: Vault", "swift", .type), ["Vault"], "capitalised names are types")
+
+    // Ordering is the whole algorithm: a keyword inside a string or comment is
+    // not a keyword.
+    t.expect(!roles("// let x", "swift").contains(.keyword), "keywords inside comments are not highlighted")
+    t.expect(!roles("\"let x\"", "swift").contains(.keyword), "keywords inside strings are not highlighted")
+
+    t.equal(text("# a comment\necho hi", "bash", .comment), ["# a comment"], "hash comments in shell")
+    t.expect(!roles("color: #C8FF00;", "css").contains(.comment), "a css colour is not a comment")
+    t.equal(text("{\"a\": true}", "json", .keyword), ["true"], "json literals")
+
+    // An unknown language still gets the universal shapes.
+    t.equal(text("x = 42 // why", "fortran", .number), ["42"], "unknown languages still find numbers")
+    t.equal(text("x = 42 // why", "fortran", .comment), ["// why"], "unknown languages still find comments")
+    t.expect(CodeHighlighter.spans(in: "", info: "swift").isEmpty, "empty code is safe")
+
+    // Spans must never overlap, or attribute application double-writes.
+    let sample = "func greet(_ name: String) -> Int { return 1 /* x */ }"
+    var last = -1, disjoint = true
+    for span in CodeHighlighter.spans(in: sample, info: "swift") {
+        if span.range.location < last { disjoint = false }
+        last = NSMaxRange(span.range)
+    }
+    t.expect(disjoint, "spans are ordered and non-overlapping")
+}
+
 t.suite("git sync") {
     let sandbox = URL(fileURLWithPath: NSTemporaryDirectory())
         .appending(path: "milky-git-\(ProcessInfo.processInfo.processIdentifier)")

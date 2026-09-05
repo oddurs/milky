@@ -5,23 +5,29 @@
    system default, once for an explicit toggle — so no rule elsewhere in the site
    needs to know which theme is active. */
 :root {
-  --surface:        #FCFCFB;
-  --surface-sunken: #E9E9E7;
-  --ink:            #17171B;
-  --ink-soft:       #6C6C75;
-  --ink-faint:      #9A9AA4;
-  --rule:           rgba(20, 20, 26, 0.11);
-  --rule-soft:      rgba(20, 20, 26, 0.06);
-  --accent:         #C8FF00;
-  --accent-ink:     #5A7300;
-  --on-accent:      #0E1300;
-  --link:           #1A6FDB;
-  --syntax:         rgba(0, 0, 0, 0.22);
-  --syntax-active:  rgba(0, 0, 0, 0.38);
-  --code-ink:       #B8354C;
-  --code-surface:   rgba(20, 20, 26, 0.05);
-  --tag-ink:        #475900;
-  --tag-surface:    rgba(200, 255, 0, 0.42);
+  --surface:          #FCFCFB;
+  --surface-sunken:   #E9E9E7;
+  --ink:              #17171B;
+  --ink-soft:         #6C6C75;
+  --ink-faint:        #9A9AA4;
+  --rule:             rgba(20, 20, 26, 0.11);
+  --rule-soft:        rgba(20, 20, 26, 0.06);
+  --accent:           #C8FF00;
+  --accent-ink:       #5A7300;
+  --on-accent:        #0E1300;
+  --link:             #1A6FDB;
+  --syntax:           rgba(0, 0, 0, 0.22);
+  --syntax-active:    rgba(0, 0, 0, 0.38);
+  --code-ink:         #B8354C;
+  --code-surface:     rgba(20, 20, 26, 0.05);
+  --tag-ink:          #475900;
+  --code-keyword:     #4A6300;
+  --code-string:      #8A5300;
+  --code-number:      #6A34C7;
+  --code-type:        #0B6B63;
+  --code-comment:     #6D6D78;
+  --code-punctuation: #6C6C75;
+  --tag-surface:      rgba(200, 255, 0, 0.42);
 
   --window-surface: #FFFFFF;
   --window-sidebar: #F2F1EF;
@@ -56,23 +62,29 @@
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --surface:        #0D0D0F;
-    --surface-sunken: #141417;
-    --ink:            #ECECEF;
-    --ink-soft:       #93939D;
-    --ink-faint:      #6E6E79;
-    --rule:           rgba(255, 255, 255, 0.13);
-    --rule-soft:      rgba(255, 255, 255, 0.07);
-    --accent:         #C8FF00;
-    --accent-ink:     #C8FF00;
-    --on-accent:      #0E1300;
-    --link:           #6BADFA;
-    --syntax:         rgba(255, 255, 255, 0.26);
-    --syntax-active:  rgba(255, 255, 255, 0.45);
-    --code-ink:       #F09E90;
-    --code-surface:   rgba(255, 255, 255, 0.08);
-    --tag-ink:        #D4F27A;
-    --tag-surface:    rgba(200, 255, 0, 0.20);
+    --surface:          #0D0D0F;
+    --surface-sunken:   #141417;
+    --ink:              #ECECEF;
+    --ink-soft:         #93939D;
+    --ink-faint:        #6E6E79;
+    --rule:             rgba(255, 255, 255, 0.13);
+    --rule-soft:        rgba(255, 255, 255, 0.07);
+    --accent:           #C8FF00;
+    --accent-ink:       #C8FF00;
+    --on-accent:        #0E1300;
+    --link:             #6BADFA;
+    --syntax:           rgba(255, 255, 255, 0.26);
+    --syntax-active:    rgba(255, 255, 255, 0.45);
+    --code-ink:         #F09E90;
+    --code-surface:     rgba(255, 255, 255, 0.08);
+    --tag-ink:          #D4F27A;
+    --code-keyword:     #C8FF00;
+    --code-string:      #E8B87A;
+    --code-number:      #C4A6FF;
+    --code-type:        #6FD8C8;
+    --code-comment:     #94949E;
+    --code-punctuation: #94949E;
+    --tag-surface:      rgba(200, 255, 0, 0.20);
 
     --window-surface: #1B1B1E;
     --window-sidebar: #212125;
@@ -83,23 +95,29 @@
 }
 
 :root[data-theme="dark"] {
-  --surface:        #0D0D0F;
-  --surface-sunken: #141417;
-  --ink:            #ECECEF;
-  --ink-soft:       #93939D;
-  --ink-faint:      #6E6E79;
-  --rule:           rgba(255, 255, 255, 0.13);
-  --rule-soft:      rgba(255, 255, 255, 0.07);
-  --accent:         #C8FF00;
-  --accent-ink:     #C8FF00;
-  --on-accent:      #0E1300;
-  --link:           #6BADFA;
-  --syntax:         rgba(255, 255, 255, 0.26);
-  --syntax-active:  rgba(255, 255, 255, 0.45);
-  --code-ink:       #F09E90;
-  --code-surface:   rgba(255, 255, 255, 0.08);
-  --tag-ink:        #D4F27A;
-  --tag-surface:    rgba(200, 255, 0, 0.20);
+  --surface:          #0D0D0F;
+  --surface-sunken:   #141417;
+  --ink:              #ECECEF;
+  --ink-soft:         #93939D;
+  --ink-faint:        #6E6E79;
+  --rule:             rgba(255, 255, 255, 0.13);
+  --rule-soft:        rgba(255, 255, 255, 0.07);
+  --accent:           #C8FF00;
+  --accent-ink:       #C8FF00;
+  --on-accent:        #0E1300;
+  --link:             #6BADFA;
+  --syntax:           rgba(255, 255, 255, 0.26);
+  --syntax-active:    rgba(255, 255, 255, 0.45);
+  --code-ink:         #F09E90;
+  --code-surface:     rgba(255, 255, 255, 0.08);
+  --tag-ink:          #D4F27A;
+  --code-keyword:     #C8FF00;
+  --code-string:      #E8B87A;
+  --code-number:      #C4A6FF;
+  --code-type:        #6FD8C8;
+  --code-comment:     #94949E;
+  --code-punctuation: #94949E;
+  --tag-surface:      rgba(200, 255, 0, 0.20);
 
   --window-surface: #1B1B1E;
   --window-sidebar: #212125;

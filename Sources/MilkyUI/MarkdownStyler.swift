@@ -49,7 +49,8 @@ public enum MarkdownStyler {
         for token in tokens {
             switch token.kind {
             case .heading, .codeBlock, .codeFence, .blockquote, .listBullet,
-                 .listNumber, .taskOpen, .taskDone, .horizontalRule, .frontmatter:
+                 .listNumber, .taskOpen, .taskDone, .horizontalRule, .frontmatter,
+                 .tableCell, .tablePipe, .tableDelimiter:
                 let paragraph = ns.paragraphRange(for: NSRange(location: min(token.range.location, max(ns.length - 1, 0)), length: 0))
                 if blockKindByLocation[paragraph.location] == nil {
                     blockKindByLocation[paragraph.location] = token.kind
@@ -105,7 +106,68 @@ public enum MarkdownStyler {
             }
         }
 
+        applySyntaxHighlighting(tokens, to: storage, theme: theme, ns: ns)
+
         return Output(decorations: decorations, links: links)
+    }
+
+    // MARK: - Code
+
+    /// Colour inside fenced blocks, run after the markdown pass so it overwrites
+    /// the flat code colour.
+    ///
+    /// Highlighting works on a whole block rather than line by line: a multi-line
+    /// string or block comment only reads correctly with its neighbours present.
+    private static func applySyntaxHighlighting(_ tokens: [Token], to storage: NSTextStorage,
+                                                theme: Theme, ns: NSString) {
+        var blocks: [(range: NSRange, language: String?)] = []
+        for token in tokens where token.kind == .codeBlock {
+            guard NSMaxRange(token.range) <= ns.length else { continue }
+            // Lines are contiguous when only a newline separates them.
+            if var last = blocks.last,
+               token.range.location <= NSMaxRange(last.range) + 1,
+               last.language == token.payload {
+                last.range = NSUnionRange(last.range, token.range)
+                blocks[blocks.count - 1] = last
+            } else {
+                blocks.append((token.range, token.payload))
+            }
+        }
+
+        for block in blocks {
+            guard block.range.length > 0 else { continue }
+            let code = ns.substring(with: block.range)
+            for span in CodeHighlighter.spans(in: code, info: block.language) {
+                let range = NSRange(location: block.range.location + span.range.location,
+                                    length: span.range.length)
+                guard NSMaxRange(range) <= ns.length else { continue }
+                storage.addAttribute(.foregroundColor, value: colour(for: span.token), range: range)
+                if span.token == .comment {
+                    storage.addAttribute(.font,
+                                         value: theme.monoFont(size: theme.bodySize * 0.93, italic: true),
+                                         range: range)
+                }
+                if span.token == .function {
+                    storage.addAttribute(.font,
+                                         value: theme.monoFont(size: theme.bodySize * 0.93, weight: .semibold),
+                                         range: range)
+                }
+            }
+        }
+    }
+
+    /// Seven roles, three hues and the neutrals. Keyword carries the brand; the
+    /// rest sit far enough apart in hue to stay distinct at 13pt.
+    private static func colour(for token: CodeToken) -> NSColor {
+        switch token {
+        case .keyword:     return Ink.codeKeyword
+        case .string:      return Ink.codeString
+        case .number:      return Ink.codeNumber
+        case .type:        return Ink.codeType
+        case .comment:     return Ink.codeComment
+        case .punctuation: return Ink.codePunctuation
+        case .function:    return Ink.ink
+        }
     }
 
     // MARK: - Base
@@ -179,6 +241,12 @@ public enum MarkdownStyler {
         case .horizontalRule:
             storage.addAttribute(.foregroundColor, value: NSColor.clear, range: paragraph)
 
+        case .tableCell, .tablePipe, .tableDelimiter:
+            // A source table only lines up in a monospaced face. Setting the row
+            // in mono is what makes hand-aligned columns actually align.
+            style.lineHeightMultiple = 1.25
+            storage.addAttribute(.font, value: theme.monoFont(size: theme.bodySize * 0.92), range: paragraph)
+
         case .frontmatter:
             storage.addAttribute(.font, value: theme.monoFont(size: theme.bodySize * 0.82), range: paragraph)
             storage.addAttribute(.foregroundColor, value: Ink.inkSoft, range: paragraph)
@@ -225,6 +293,17 @@ public enum MarkdownStyler {
 
             case .blockquote:
                 storage.addAttribute(.foregroundColor, value: NSColor.clear, range: range)
+                return nil
+
+            case .tablePipe, .tableDelimiter:
+                storage.addAttribute(.foregroundColor, value: Ink.syntax, range: range)
+                return nil
+
+            case .hardBreak:
+                // Trailing whitespace you cannot see, carrying meaning. Underline
+                // it so the line break is visible in the source.
+                storage.addAttribute(.underlineStyle, value: NSUnderlineStyle.single.rawValue, range: range)
+                storage.addAttribute(.underlineColor, value: Ink.accentInk, range: range)
                 return nil
 
             case .codeFence:
@@ -276,6 +355,19 @@ public enum MarkdownStyler {
         case .tag:
             storage.addAttribute(.foregroundColor, value: Ink.tagInk, range: range)
             storage.addAttribute(.font, value: theme.font(size: theme.bodySize * 0.95, weight: .medium), range: range)
+        case .tableCell(let isHeader):
+            if isHeader {
+                storage.addAttribute(.font,
+                                     value: theme.monoFont(size: theme.bodySize * 0.92, weight: .semibold),
+                                     range: range)
+            }
+        case .footnoteRef:
+            storage.addAttribute(.foregroundColor, value: Ink.accentInk, range: range)
+            storage.addAttribute(.font, value: theme.font(size: theme.bodySize * 0.78), range: range)
+            storage.addAttribute(.baselineOffset, value: theme.bodySize * 0.22, range: range)
+        case .footnoteDef:
+            storage.addAttribute(.foregroundColor, value: Ink.accentInk, range: range)
+            storage.addAttribute(.font, value: theme.font(size: theme.bodySize * 0.9, weight: .medium), range: range)
         case .taskDone:
             storage.addAttribute(.strikethroughStyle, value: NSUnderlineStyle.single.rawValue, range: range)
             storage.addAttribute(.strikethroughColor, value: Ink.inkSoft, range: range)

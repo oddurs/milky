@@ -22,6 +22,17 @@ public enum TokenKind: Equatable, Sendable {
     case tag
     case horizontalRule
     case frontmatter
+    /// A GFM pipe table. `isHeader` styles the first row; the delimiter row
+    /// (`|---|:--:|`) is punctuation and gets dimmed away entirely.
+    case tableCell(isHeader: Bool)
+    case tablePipe
+    case tableDelimiter
+    /// Two trailing spaces, or a trailing backslash: a line break inside a
+    /// paragraph. Invisible by definition, so the editor has to mark it.
+    case hardBreak
+    /// `[^1]` in the text, and `[^1]: …` where it is defined.
+    case footnoteRef
+    case footnoteDef
 }
 
 /// Whether a span is punctuation the reader shouldn't have to look at
@@ -63,8 +74,10 @@ public enum MarkdownSyntax {
         var tokens: [Token] = []
         var location = 0
         var inFence = false
+        var fenceInfo: String? = nil
         var inFrontmatter = false
         var lineIndex = 0
+        var inTable = false
 
         // Bound by `<` and advance by the line's full length: at `location == length`
         // lineRange(for:) reports the *last* line rather than an empty range, which
@@ -90,21 +103,106 @@ public enum MarkdownSyntax {
                 continue
             }
 
-            // Fenced code blocks swallow everything until they close.
+            // Fenced code blocks swallow everything until they close. The
+            // opening fence's info string is carried on every line of the block
+            // so the styler can hand it to the highlighter.
             let trimmed = line.trimmingCharacters(in: .whitespaces)
             if trimmed.hasPrefix("```") || trimmed.hasPrefix("~~~") {
-                inFence.toggle()
-                tokens.append(Token(contentRange, .codeFence, .marker))
+                if inFence {
+                    inFence = false
+                    fenceInfo = nil
+                } else {
+                    inFence = true
+                    fenceInfo = String(trimmed.dropFirst(3)).trimmingCharacters(in: .whitespaces)
+                    if fenceInfo?.isEmpty == true { fenceInfo = nil }
+                }
+                tokens.append(Token(contentRange, .codeFence, .marker, payload: fenceInfo))
                 continue
             }
             if inFence {
-                tokens.append(Token(contentRange, .codeBlock, .content))
+                tokens.append(Token(contentRange, .codeBlock, .content, payload: fenceInfo))
+                continue
+            }
+
+            // A pipe table is only a table once the delimiter row proves it, so
+            // detection looks ahead one line rather than guessing from a pipe.
+            if inTable {
+                if isTableDelimiter(line) {
+                    tokens.append(Token(contentRange, .tableDelimiter, .marker))
+                    continue
+                }
+                if looksLikeTableRow(line) {
+                    scanTableRow(line, at: contentRange.location, isHeader: false, into: &tokens)
+                    continue
+                }
+                inTable = false
+            }
+            if looksLikeTableRow(line), isTableDelimiter(nextLine(ns, after: lineRange)) {
+                inTable = true
+                scanTableRow(line, at: contentRange.location, isHeader: true, into: &tokens)
                 continue
             }
 
             scanLine(line, at: contentRange.location, into: &tokens)
         }
         return tokens
+    }
+
+    // MARK: - Tables
+
+    /// `| a | b |` — at least one pipe with content either side of it.
+    public static func looksLikeTableRow(_ line: String) -> Bool {
+        guard line.contains("|") else { return false }
+        let trimmed = line.trimmingCharacters(in: .whitespaces)
+        guard !trimmed.hasPrefix("```"), !trimmed.hasPrefix(">") else { return false }
+        return regexCache.match("^\\s*\\|?[^|]*\\|", in: line) != nil
+    }
+
+    /// `|---|:--:|---:|` — the row that makes the block above it a table.
+    public static func isTableDelimiter(_ line: String?) -> Bool {
+        guard let line, line.contains("-") else { return false }
+        return regexCache.match("^\\s*\\|?\\s*:?-{1,}:?\\s*(\\|\\s*:?-{1,}:?\\s*)*\\|?\\s*$", in: line) != nil
+    }
+
+    static func nextLine(_ ns: NSString, after lineRange: NSRange) -> String? {
+        let start = NSMaxRange(lineRange)
+        guard start < ns.length else { return nil }
+        let next = ns.lineRange(for: NSRange(location: start, length: 0))
+        let content = ns.range(of: "[^\\n\\r]*", options: .regularExpression, range: next)
+        return ns.substring(with: content)
+    }
+
+    /// Pipes are punctuation; the text between them is content. Header cells are
+    /// marked so the styler can set them bold without re-parsing.
+    static func scanTableRow(_ line: String, at offset: Int, isHeader: Bool,
+                             into tokens: inout [Token]) {
+        let ns = line as NSString
+        var cursor = 0
+        var cellStart = 0
+
+        func emitCell(upTo end: Int) {
+            let raw = NSRange(location: cellStart, length: end - cellStart)
+            guard raw.length > 0 else { return }
+            // Trim the padding so emphasis inside a cell lines up with its text.
+            let text = ns.substring(with: raw)
+            let leading = text.prefix { $0 == " " }.count
+            let trailing = text.reversed().prefix { $0 == " " }.count
+            let inner = NSRange(location: raw.location + leading,
+                                length: max(0, raw.length - leading - trailing))
+            guard inner.length > 0 else { return }
+            tokens.append(Token(shift(inner, by: offset), .tableCell(isHeader: isHeader), .content))
+            scanInline(ns.substring(with: inner), at: offset + inner.location, into: &tokens)
+        }
+
+        while cursor < ns.length {
+            if ns.character(at: cursor) == unichar(UInt16(124)) {   // "|"
+                emitCell(upTo: cursor)
+                tokens.append(Token(NSRange(location: offset + cursor, length: 1), .tablePipe, .marker))
+                cellStart = cursor + 1
+            }
+            cursor += 1
+        }
+        emitCell(upTo: ns.length)
     }
 
     // MARK: - Line scanning
@@ -207,6 +305,24 @@ public enum MarkdownSyntax {
         for m in regexCache.matches("(?<![(\\w])https?://[^\\s)\\]]+", in: text) where claim(m.range) {
             tokens.append(Token(shift(m.range, by: offset), .link, .content,
                                 payload: ns.substring(with: m.range)))
+        }
+
+        // [^1] and its definition. Checked before tags so [^1] is not read as one.
+        for m in regexCache.matches("\\[\\^([^\\]]+)\\]:?", in: text) where claim(m.range) {
+            let isDefinition = NSMaxRange(m.range) <= ns.length
+                && ns.substring(with: m.range).hasSuffix(":")
+            tokens.append(Token(shift(m.range, by: offset),
+                                isDefinition ? .footnoteDef : .footnoteRef,
+                                .content, payload: ns.substring(with: m.range(at: 1))))
+        }
+
+        // A hard break is two trailing spaces or a trailing backslash. It is
+        // invisible in the source, so the editor has to draw something.
+        if let m = regexCache.match("( {2,}|\\\\)$", in: text) {
+            let range = shift(m.range(at: 1), by: offset)
+            if claim(m.range(at: 1)) {
+                tokens.append(Token(range, .hardBreak, .marker))
+            }
         }
 
         // #tags

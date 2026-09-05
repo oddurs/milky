@@ -1,0 +1,66 @@
+{
+  "_about": [
+    "The inventory of what Milky's editor understands, and how each construct is drawn.",
+    "Rendered on /design and mirrored in DesignSystem/README.md. Keep it honest:",
+    "if the tokenizer doesn't handle something, it belongs under `unsupported`, not `blocks`."
+  ],
+
+  "principles": [
+    "The source is the document. There is no preview mode, and so no second representation to keep in sync.",
+    "Punctuation is dimmed, never deleted. The asterisks around bold text stay in the file and stay on screen — they just step back until the caret enters that line.",
+    "Nothing rewrites your file. Bullets and checkboxes are drawn on top of the literal hyphen and bracket characters; the bytes on disk are exactly what you typed.",
+    "Where a construct cannot be laid out in a plain-text editor — a table's column alignment — the source is set monospaced so hand-alignment works, rather than faked."
+  ],
+
+  "blocks": [
+    { "name": "Heading",          "syntax": "# … ###### Heading",     "render": "Scaled and bolded; the # dims to a margin mark",          "token": "heading",        "status": "full" },
+    { "name": "Paragraph",        "syntax": "Any run of lines",        "render": "Body face; blank lines set the block rhythm",             "token": "—",              "status": "full" },
+    { "name": "Fenced code",      "syntax": "``` or ~~~ with a language", "render": "Rounded ground, monospaced, syntax highlighted",       "token": "codeBlock",      "status": "full" },
+    { "name": "Blockquote",       "syntax": "> quoted",                "render": "Indented, italic, with a drawn rule in the margin",       "token": "blockquote",     "status": "partial", "note": "Nested `> >` parses but is not drawn deeper" },
+    { "name": "Bulleted list",    "syntax": "- item   * item   + item", "render": "A drawn bullet over the hidden marker; hanging indent",   "token": "listBullet",     "status": "full" },
+    { "name": "Ordered list",     "syntax": "1. item   1) item",       "render": "Number in the accent ink; Return continues and increments", "token": "listNumber",    "status": "full" },
+    { "name": "Task list",        "syntax": "- [ ] todo   - [x] done", "render": "A drawn circle or filled accent disc with a tick",        "token": "taskOpen/Done",  "status": "full" },
+    { "name": "Table",            "syntax": "| a | b |\n| --- | :-: |", "render": "Monospaced rows, bold header, dimmed pipes and rule row", "token": "tableCell",      "status": "partial", "note": "Alignment markers parse but cannot move text in a plain-text editor" },
+    { "name": "Horizontal rule",  "syntax": "---   ***   ___",         "render": "A drawn hairline; the characters themselves go clear",    "token": "horizontalRule", "status": "full" },
+    { "name": "Frontmatter",      "syntax": "--- at the top of a file", "render": "Monospaced and dimmed, treated as metadata not prose",   "token": "frontmatter",    "status": "full" },
+    { "name": "Footnote",         "syntax": "[^1] and [^1]: text",     "render": "Reference raised and small; definition in the accent ink", "token": "footnoteRef/Def", "status": "full" },
+    { "name": "Hard break",       "syntax": "Two trailing spaces, or \\", "render": "Underlined, because the source is otherwise invisible",  "token": "hardBreak",      "status": "full" }
+  ],
+
+  "inline": [
+    { "name": "Bold",           "syntax": "**text**   __text__",  "render": "Weight merged onto whatever the block already set", "token": "bold",          "status": "full" },
+    { "name": "Italic",         "syntax": "*text*   _text_",      "render": "Italic; intraword underscores are left alone",      "token": "italic",        "status": "full" },
+    { "name": "Bold italic",    "syntax": "***text***",           "render": "Both traits merged",                                "token": "boldItalic",    "status": "full" },
+    { "name": "Strikethrough",  "syntax": "~~text~~",             "render": "Struck and dimmed",                                 "token": "strikethrough", "status": "full" },
+    { "name": "Inline code",    "syntax": "`code`",               "render": "Monospaced on a rounded pill",                      "token": "inlineCode",    "status": "full" },
+    { "name": "Link",           "syntax": "[text](url)",          "render": "Label in the system blue; the URL dims away",       "token": "link",          "status": "full" },
+    { "name": "Autolink",       "syntax": "https://example.com",  "render": "Coloured and clickable in place",                   "token": "link",          "status": "full" },
+    { "name": "Wiki link",      "syntax": "[[Note]]   [[Note|as]]", "render": "Accent ink — internal navigation, not a URL",     "token": "wikiLink",      "status": "full" },
+    { "name": "Tag",            "syntax": "#tag",                 "render": "A pill; collected into the sidebar",                "token": "tag",           "status": "full" },
+    { "name": "Image",          "syntax": "![alt](src)",          "render": "Styled as a link",                                  "token": "link",          "status": "partial", "note": "Parsed, but the image is not shown inline yet — item 0012" }
+  ],
+
+  "unsupported": [
+    { "name": "Setext headings",   "syntax": "Title\n=====",       "why": "The underline form collides with horizontal rules and frontmatter, and almost nobody types it." },
+    { "name": "Reference links",   "syntax": "[text][ref]",        "why": "Rarely written by hand; the inline form covers the same ground." },
+    { "name": "Inline and block HTML", "syntax": "<div>…</div>",   "why": "Notes are prose. Rendering HTML would mean a second representation to keep in sync." },
+    { "name": "Definition lists",  "syntax": "Term\n: definition", "why": "Not part of GFM." },
+    { "name": "Emoji shortcodes",  "syntax": ":smile:",            "why": "macOS has a system emoji picker; the literal character round-trips everywhere." },
+    { "name": "Math",              "syntax": "$x^2$",              "why": "Not part of GFM, and it needs a typesetter." }
+  ],
+
+  "syntaxRoles": [
+    { "role": "keyword",     "token": "codeKeyword",     "what": "Declarations and control flow. Carries the brand hue." },
+    { "role": "string",      "token": "codeString",      "what": "Strings and characters." },
+    { "role": "number",      "token": "codeNumber",      "what": "Numbers, booleans, nil." },
+    { "role": "type",        "token": "codeType",        "what": "Type names, and capitalised identifiers where the language warrants it." },
+    { "role": "function",    "token": "ink (semibold)",  "what": "A name being called or declared. Weight rather than a fourth hue." },
+    { "role": "comment",     "token": "codeComment",     "what": "Comments, set italic." },
+    { "role": "punctuation", "token": "codePunctuation", "what": "Operators and brackets." }
+  ],
+
+  "languages": [
+    "swift", "javascript", "typescript", "json", "shell", "python",
+    "rust", "go", "c-family", "css", "html", "yaml/toml"
+  ]
+}

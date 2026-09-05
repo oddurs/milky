@@ -1,6 +1,7 @@
 ---
 import Base from '../layouts/Base.astro';
 import tokens from '../../../DesignSystem/tokens.json';
+import md from '../../../DesignSystem/markdown.json';
 
 // Rendered from the same file the Swift and CSS tokens are generated from, so
 // this page cannot describe a system the apps don't have.
@@ -148,6 +149,83 @@ const roles = [
     </section>
 
     <section>
+      <h2><span class="hash">##</span>Markdown</h2>
+      <p>
+        The source <em>is</em> the document. There is no preview mode, so there is
+        no second representation to keep in sync — and nothing here rewrites your
+        file.
+      </p>
+      <ol class="principles">
+        {md.principles.map((p) => <li>{p}</li>)}
+      </ol>
+
+      <h3>Blocks</h3>
+      <table class="md">
+        <thead><tr><th>Construct</th><th>You type</th><th>You see</th><th></th></tr></thead>
+        <tbody>
+          {md.blocks.map((row) => (
+            <tr>
+              <td>{row.name}</td>
+              <td><code>{row.syntax}</code></td>
+              <td class="muted">{row.render}{row.note && <em class="note"> — {row.note}</em>}</td>
+              <td><span class={`status ${row.status}`}>{row.status}</span></td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      <h3>Inline</h3>
+      <table class="md">
+        <thead><tr><th>Construct</th><th>You type</th><th>You see</th><th></th></tr></thead>
+        <tbody>
+          {md.inline.map((row) => (
+            <tr>
+              <td>{row.name}</td>
+              <td><code>{row.syntax}</code></td>
+              <td class="muted">{row.render}{row.note && <em class="note"> — {row.note}</em>}</td>
+              <td><span class={`status ${row.status}`}>{row.status}</span></td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      <h3>Deliberately not supported</h3>
+      <p>Saying so is part of the spec. Each of these was considered and left out.</p>
+      <dl class="components">
+        {md.unsupported.map((row) => (
+          <div><dt><code>{row.syntax.split('\n')[0]}</code></dt><dd>{row.why}</dd></div>
+        ))}
+      </dl>
+    </section>
+
+    <section>
+      <h2><span class="hash">##</span>Syntax theme</h2>
+      <p>
+        Seven roles, three hues and the neutrals. The keyword carries the brand;
+        a function is distinguished by weight rather than a fourth colour, which
+        keeps the palette from turning into a rainbow. Every role clears 4.5:1 on
+        the code ground in both appearances.
+      </p>
+
+      <pre class="sample"><code><span class="c">{'/// Reads a note off disk.'}</span>{'\n'}<span class="k">func</span> <span class="f">load</span><span class="p">(</span>_ url<span class="p">:</span> <span class="t">URL</span><span class="p">)</span> <span class="k">throws</span> <span class="p">-&gt;</span> <span class="t">Note</span> <span class="p">{'{'}</span>{'\n    '}<span class="k">let</span> text <span class="p">=</span> <span class="k">try</span> <span class="t">String</span><span class="p">(</span>contentsOf<span class="p">:</span> url<span class="p">)</span>{'\n    '}<span class="k">return</span> <span class="t">Note</span><span class="p">(</span>text<span class="p">:</span> text<span class="p">,</span> count<span class="p">:</span> <span class="n">42</span><span class="p">)</span>{'\n'}<span class="p">{'}'}</span></code></pre>
+
+      <ul class="swatches">
+        {md.syntaxRoles.map((r) => (
+          <li>
+            <span class="chip" style={`background: var(--${kebab(r.token.split(' ')[0])})`}></span>
+            <div><code>{r.role}</code><p>{r.what}</p></div>
+          </li>
+        ))}
+      </ul>
+
+      <p class="muted small">
+        Known languages: {md.languages.join(', ')}. Anything else falls back to a
+        generic lexer that still finds comments, strings and numbers — most of the
+        value, and honest about the rest.
+      </p>
+    </section>
+
+    <section>
       <h2><span class="hash">##</span>Components</h2>
       <p>
         Extracted because they were already duplicated, not invented up front.
@@ -230,6 +308,39 @@ const roles = [
   .components dd { margin: 0; color: var(--ink-soft); font-size: 15px; }
 
   footer { padding-top: var(--space-page); }
+
+  .principles { margin: var(--space-xxl) 0 0; padding-left: 1.4em; }
+  .principles li { margin-bottom: var(--space-md); color: var(--ink-soft); max-width: 36em; }
+
+  table.md td { font-size: 13.5px; vertical-align: top; }
+  table.md td:first-child { white-space: nowrap; font-weight: 600; }
+  table.md code { white-space: pre; font-size: 12px; }
+  .note { color: var(--ink-faint); font-style: italic; }
+
+  .status {
+    font-size: 11px; font-weight: 600; padding: 2px 8px;
+    border-radius: var(--radius-capsule); white-space: nowrap;
+  }
+  .status.full { background: var(--tag-surface); color: var(--tag-ink); }
+  .status.partial { background: var(--rule-soft); color: var(--ink-soft); }
+
+  .sample {
+    margin: var(--space-xxl) 0;
+    padding: var(--space-xl);
+    border-radius: var(--radius-lg);
+    background: var(--code-surface);
+    overflow-x: auto;
+    font-family: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--ink);
+  }
+  .sample .k { color: var(--code-keyword); }
+  .sample .t { color: var(--code-type); }
+  .sample .n { color: var(--code-number); }
+  .sample .c { color: var(--code-comment); font-style: italic; }
+  .sample .p { color: var(--code-punctuation); }
+  .sample .f { color: var(--ink); font-weight: 600; }
 
   @media (max-width: 640px) {
     .components > div { grid-template-columns: 1fr; gap: var(--space-xs); }

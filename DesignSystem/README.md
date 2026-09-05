@@ -95,6 +95,43 @@ Extracted because they were already duplicated, not invented up front:
   icon colour had already diverged between them.
 - **`CountBadge`** — tabular figures, so a column of counts doesn't shuffle.
 
+## Markdown
+
+`markdown.json` is the inventory: every construct the editor understands, what
+you type, how it draws, and which token it uses. `/design` renders it. Three
+statuses — `full`, `partial`, and an explicit `unsupported` list, because saying
+what you *don't* do is part of a spec.
+
+The contract:
+
+- The source is the document. No preview mode, no second representation.
+- Punctuation is dimmed, never deleted.
+- Nothing rewrites the file. Bullets and checkboxes are drawn over the literal
+  characters; the bytes on disk are what was typed.
+
+GFM support covers headings, fenced code with an info string, blockquotes, all
+three list kinds, task lists, pipe tables, rules, frontmatter, footnotes and hard
+breaks; plus the full inline set including wiki links and tags. Setext headings,
+reference links, HTML, definition lists, emoji shortcodes and math are
+deliberately out — each with a reason recorded in the JSON.
+
+## Syntax highlighting
+
+`CodeHighlighter` lives in `MilkyCore`, so iOS gets it for free. It is a lexer,
+not a parser: it finds comments, strings, numbers, keywords, type names and call
+sites, and leaves the rest plain. That is a deliberate limit — notes hold
+fragments far more often than compilable files, and a real grammar would reject
+half of them. Unknown languages fall back to a generic lexer that still finds
+comments, strings and numbers.
+
+Seven roles, three hues and the neutrals. Keyword carries the brand; a function
+is distinguished by **weight** rather than a fourth colour, which is what stops
+the palette becoming a rainbow. Every role clears 4.5:1 on the code ground in
+both appearances — verified, not assumed.
+
+Ordering is the algorithm: comments and strings claim their ranges first, so a
+keyword inside a string is not highlighted. There are tests for exactly that.
+
 ## Adding to the system
 
 1. A new colour → `tokens.json`, regenerate, use it. Check both appearances.
