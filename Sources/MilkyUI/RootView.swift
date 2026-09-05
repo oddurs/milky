@@ -17,7 +17,10 @@ public struct RootView: View {
                 splitView
             }
         }
-        .tint(Palette.accent)
+        // .tint colours control *labels* as often as fills, so it takes the ink
+        // variant — a lime button title would be unreadable on a light sheet.
+        .tint(Palette.accentInk)
+        .restoresWindowFrame(named: "MilkyMainWindow")
         .alert("Something went wrong",
                isPresented: Binding(get: { model.errorMessage != nil },
                                     set: { if !$0 { model.errorMessage = nil } })) {
@@ -39,7 +42,7 @@ public struct RootView: View {
         }
         .navigationSplitViewStyle(.balanced)
         .toolbar {
-            ToolbarItemGroup {
+            ToolbarItemGroup(placement: .primaryAction) {
                 Button {
                     showingAppearance.toggle()
                 } label: {

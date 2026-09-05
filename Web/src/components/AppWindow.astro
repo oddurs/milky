@@ -113,7 +113,7 @@ const notes = [
 
       <hr class="rule-line" />
 
-      <p class="ln">Related: <span class="syn">[[</span><a href="#editor">Reading</a><span class="syn">]]</span> and <span class="tag">#design</span><span class="caret"></span></p>
+      <p class="ln">Related: <span class="syn">[[</span><a class="wiki" href="#editor">Reading</a><span class="syn">]]</span> and <span class="tag">#design</span><span class="caret"></span></p>
     </div>
 
     <div class="doc-foot"><span>132 words</span><span>Typography.md</span></div>
@@ -194,7 +194,7 @@ const notes = [
     border-radius: .45em;
     color: var(--ink);
   }
-  .side-row .ic { color: var(--accent); display: flex; flex: none; }
+  .side-row .ic { color: var(--accent-ink); display: flex; flex: none; }
   .side-row .count {
     margin-left: auto;
     color: var(--ink-faint);
@@ -233,12 +233,11 @@ const notes = [
   .note .m { display: flex; gap: .5em; color: var(--ink-soft); font-size: .93em; font-variant-numeric: tabular-nums; }
   .note .m .s { color: var(--ink-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-  /* On the yellow selection the text goes dark in both themes — white on yellow
-     fails contrast either way. */
+  /* White on #7624F4 clears 6.3:1; black manages only 3.3:1. */
   .note.sel { background: var(--accent); }
-  .note.sel .t { color: rgba(0, 0, 0, .88); }
-  .note.sel .m { color: rgba(0, 0, 0, .7); }
-  .note.sel .m .s { color: rgba(0, 0, 0, .52); }
+  .note.sel .t { color: var(--on-accent); }
+  .note.sel .m { color: color-mix(in srgb, var(--on-accent) 82%, transparent); }
+  .note.sel .m .s { color: color-mix(in srgb, var(--on-accent) 62%, transparent); }
 
   /* Editor */
   .editor { display: flex; flex-direction: column; overflow: hidden; }
@@ -310,8 +309,8 @@ const notes = [
     position: absolute;
     left: .21em; top: .28em;
     width: .34em; height: .17em;
-    border-left: 1.6px solid #fff;
-    border-bottom: 1.6px solid #fff;
+    border-left: 1.6px solid var(--on-accent);
+    border-bottom: 1.6px solid var(--on-accent);
     transform: rotate(-45deg);
   }
   .li.done { color: var(--ink-soft); }
@@ -332,6 +331,9 @@ const notes = [
     border-radius: 2px;
     background: var(--win-rule);
   }
+
+  /* Internal navigation takes the accent; external links keep the system blue. */
+  .wiki { color: var(--accent-ink); }
 
   .tag {
     background: var(--tag-bg);

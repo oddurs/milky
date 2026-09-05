@@ -71,6 +71,27 @@ Serve over HTTP, not `file://`, when checking a page: Chrome sniffs UTF-8 for lo
 files and hid a missing `<meta charset>` that turned every em dash to mojibake the
 moment a real server omitted the header.
 
+## The accent is a fill, not an ink
+
+The brand colour is **#C8FF00**. It carries 17.8:1 against black and **1.2:1
+against white**, so it can front a filled row, a button or a checkbox, and it
+cannot be a caret, a hairline, an icon or body text on a light ground.
+
+Two tokens, and picking the wrong one is invisible until someone opens the app in
+light mode:
+
+- `Palette.accent` / `--accent` — fills only.
+- `Palette.accentInk` / `--accent-ink` — anything thin. Dark olive (#5A7300) on
+  light grounds, the pure lime on dark ones, since the contrast reverses.
+- `Palette.onAccent` / `--on-accent` — text *on* a lime fill. Near-black, and it
+  does not follow the appearance.
+
+`.tint()` takes the ink variant: it colours control labels as often as fills.
+
+When measuring contrast, resolve semi-transparent backgrounds first. A script
+that treats `rgba(200,255,0,.2)` as opaque compares lime against lime and reports
+a 1.06:1 failure that is not real.
+
 ## Conventions
 
 The filename is the note title; there is no separate title field on disk. Renaming

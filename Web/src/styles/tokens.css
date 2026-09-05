@@ -8,7 +8,11 @@
   --ink-faint:  #9A9AA4;
   --rule:       rgba(20, 20, 26, 0.11);
   --rule-soft:  rgba(20, 20, 26, 0.06);
-  --accent:     #F5B826;
+  /* Lime is a fill colour: 1.2:1 on white, 17.8:1 on black. Anything drawn as
+     text or a thin mark uses --accent-ink instead. */
+  --accent:     #C8FF00;
+  --accent-ink: #5A7300;
+  --on-accent:  #0E1300;
   --link:       #1A6FDB;
 
   --stage:      #E9E9E7;
@@ -20,8 +24,8 @@
                 0 44px 90px -30px rgba(20,20,26,.26);
   --code-bg:    rgba(20, 20, 26, 0.05);
   --code-ink:   #B8354C;
-  --tag-bg:     rgba(245, 184, 38, 0.26);
-  --tag-ink:    #7A5502;
+  --tag-bg:     rgba(200, 255, 0, 0.42);
+  --tag-ink:    #475900;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -32,7 +36,9 @@
     --ink-faint:  #6E6E79;
     --rule:       rgba(255, 255, 255, 0.13);
     --rule-soft:  rgba(255, 255, 255, 0.07);
-    --accent:     #F5B826;
+    --accent:     #C8FF00;
+    --accent-ink: #C8FF00;
+    --on-accent:  #0E1300;
     --link:       #6BADFA;
 
     --stage:      #141417;
@@ -44,8 +50,8 @@
                   0 50px 100px -34px rgba(0,0,0,.8);
     --code-bg:    rgba(255, 255, 255, 0.08);
     --code-ink:   #F09E90;
-    --tag-bg:     rgba(245, 184, 38, 0.2);
-    --tag-ink:    #F4C75C;
+    --tag-bg:     rgba(200, 255, 0, 0.20);
+    --tag-ink:    #D4F27A;
   }
 }
 
@@ -56,7 +62,9 @@
   --ink-faint:  #6E6E79;
   --rule:       rgba(255, 255, 255, 0.13);
   --rule-soft:  rgba(255, 255, 255, 0.07);
-  --accent:     #F5B826;
+  --accent:     #C8FF00;
+  --accent-ink: #C8FF00;
+  --on-accent:  #0E1300;
   --link:       #6BADFA;
 
   --stage:      #141417;
@@ -68,6 +76,6 @@
                 0 50px 100px -34px rgba(0,0,0,.8);
   --code-bg:    rgba(255, 255, 255, 0.08);
   --code-ink:   #F09E90;
-  --tag-bg:     rgba(245, 184, 38, 0.2);
-  --tag-ink:    #F4C75C;
+  --tag-bg:     rgba(200, 255, 0, 0.20);
+  --tag-ink:    #D4F27A;
 }

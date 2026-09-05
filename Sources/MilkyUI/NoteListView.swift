@@ -17,7 +17,10 @@ struct NoteListView: View {
                         .listRowInsets(EdgeInsets(top: 0, leading: 8, bottom: 0, trailing: 8))
                         .listRowSeparator(.hidden)
                         .contextMenu {
-                            Button("Rename…") { renameTarget = note }
+                            Button("Rename…") {
+                                renameText = note.title
+                                renameTarget = note
+                            }
                             Menu("Move to") {
                                 Button("All Notes") { model.move(note, to: "") }
                                 ForEach(model.folders, id: \.self) { folder in
@@ -42,13 +45,24 @@ struct NoteListView: View {
         }
         .searchable(text: $model.searchText, placement: .toolbar, prompt: "Search")
         .onChange(of: model.selectedNoteID) { _, _ in model.loadDraftForSelection() }
-        .sheet(item: $renameTarget) { note in
-            RenameSheet(note: note) { model.rename(note, to: $0) }
+        .alert("Rename Note", isPresented: Binding(
+            get: { renameTarget != nil },
+            set: { if !$0 { renameTarget = nil } }
+        )) {
+            TextField("Title", text: $renameText)
+            Button("Rename") {
+                if let note = renameTarget { model.rename(note, to: renameText) }
+                renameTarget = nil
+            }
+            Button("Cancel", role: .cancel) { renameTarget = nil }
+        } message: {
+            Text("The filename is the title, so this renames the file too.")
         }
         .navigationTitle(model.sidebarSelection.title)
     }
 
     @State private var renameTarget: Note?
+    @State private var renameText = ""
 
     private var listBackground: some View {
         Color(nsColor: .textBackgroundColor).opacity(0.55)
@@ -72,22 +86,27 @@ struct NoteListView: View {
 private struct NoteRow: View {
     let note: Note
     let isSelected: Bool
+    @Environment(\.controlActiveState) private var activeState
+
+    /// Selected *and* the window is the active one.
+    private var filled: Bool { isSelected && activeState != .inactive }
 
     var body: some View {
-        // On the yellow selection fill, text has to go dark in both appearances —
-        // white-on-yellow fails contrast the same way in light and dark mode.
+        // Text on the filled accent must be white — #7624F4 gives white 6.3:1 and
+        // black only 3.3:1. When the list loses focus the fill drops to a neutral
+        // tint and the text returns to normal, the way every Mac list behaves.
         VStack(alignment: .leading, spacing: 2) {
             Text(note.title)
                 .font(.system(size: 13, weight: .semibold))
                 .lineLimit(1)
-                .foregroundStyle(isSelected ? AnyShapeStyle(Color.black.opacity(0.88)) : AnyShapeStyle(.primary))
+                .foregroundStyle(filled ? AnyShapeStyle(Palette.onAccent) : AnyShapeStyle(.primary))
             HStack(spacing: 5) {
                 Text(NoteRow.dateLabel(note.modified))
                     .font(.system(size: 11.5))
-                    .foregroundStyle(isSelected ? AnyShapeStyle(Color.black.opacity(0.7)) : AnyShapeStyle(.secondary))
+                    .foregroundStyle(filled ? AnyShapeStyle(Palette.onAccent.opacity(0.82)) : AnyShapeStyle(.secondary))
                 Text(note.snippet.isEmpty ? "No additional text" : note.snippet)
                     .font(.system(size: 11.5))
-                    .foregroundStyle(isSelected ? AnyShapeStyle(Color.black.opacity(0.5)) : AnyShapeStyle(.tertiary))
+                    .foregroundStyle(filled ? AnyShapeStyle(Palette.onAccent.opacity(0.62)) : AnyShapeStyle(.tertiary))
                     .lineLimit(1)
             }
         }
@@ -95,11 +114,18 @@ private struct NoteRow: View {
         .padding(.horizontal, 8)
         .frame(maxWidth: .infinity, alignment: .leading)
         .contentShape(Rectangle())
+        // No inset: an inset here lets SwiftUI's own selection fill show along the
+        // edge, and the system's is blue.
         .listRowBackground(
             RoundedRectangle(cornerRadius: 7, style: .continuous)
-                .fill(isSelected ? AnyShapeStyle(Palette.accent.opacity(0.9)) : AnyShapeStyle(Color.clear))
-                .padding(.vertical, 1)
+                .fill(rowFill)
         )
+    }
+
+    private var rowFill: AnyShapeStyle {
+        if filled { return AnyShapeStyle(Palette.accent) }
+        if isSelected { return AnyShapeStyle(Color.primary.opacity(0.09)) }
+        return AnyShapeStyle(Color.clear)
     }
 
     /// Today shows a time, this week a weekday, older an actual date — the way Notes does it.
@@ -121,32 +147,4 @@ private struct NoteRow: View {
     }
 }
 
-private struct RenameSheet: View {
-    let note: Note
-    let onCommit: (String) -> Void
-    @Environment(\.dismiss) private var dismiss
-    @State private var title: String = ""
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            Text("Rename Note").font(.system(size: 13, weight: .semibold))
-            TextField("Title", text: $title)
-                .textFieldStyle(.roundedBorder)
-                .frame(width: 280)
-                .onSubmit { commit() }
-            HStack {
-                Spacer()
-                Button("Cancel") { dismiss() }.keyboardShortcut(.cancelAction)
-                Button("Rename") { commit() }.keyboardShortcut(.defaultAction)
-            }
-        }
-        .padding(20)
-        .onAppear { title = note.title }
-    }
-
-    private func commit() {
-        onCommit(title)
-        dismiss()
-    }
-}
 #endif

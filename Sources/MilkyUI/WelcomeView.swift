@@ -12,7 +12,7 @@ struct WelcomeView: View {
             VStack(spacing: 8) {
                 Image(systemName: "note.text")
                     .font(.system(size: 46, weight: .light))
-                    .foregroundStyle(Palette.accent)
+                    .foregroundStyle(Palette.accentInk)
                 Text("Milky")
                     .font(.system(size: 27, weight: .bold))
                 Text("Your notes are plain markdown files in a folder you choose.")
@@ -50,7 +50,7 @@ struct WelcomeView: View {
                         } label: {
                             HStack(spacing: 6) {
                                 Image(systemName: VaultLocations.kind(of: url).symbol)
-                                    .foregroundStyle(Palette.accent)
+                                    .foregroundStyle(Palette.accentInk)
                                 Text(url.lastPathComponent)
                                 Text(url.deletingLastPathComponent().path.replacingOccurrences(
                                     of: FileManager.default.homeDirectoryForCurrentUser.path, with: "~"))
@@ -78,7 +78,7 @@ struct WelcomeView: View {
             HStack(spacing: 12) {
                 Image(systemName: kind.symbol)
                     .font(.system(size: 17))
-                    .foregroundStyle(Palette.accent)
+                    .foregroundStyle(Palette.accentInk)
                     .frame(width: 26)
                 VStack(alignment: .leading, spacing: 1) {
                     Text(kind.label).font(.system(size: 13, weight: .medium))

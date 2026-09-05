@@ -14,7 +14,7 @@ html {
   html { scroll-behavior: auto; }
 }
 
-::selection { background: color-mix(in srgb, var(--accent) 34%, transparent); }
+::selection { background: color-mix(in srgb, var(--accent) 55%, transparent); color: var(--ink); }
 
 body {
   margin: 0;
@@ -33,7 +33,7 @@ body {
 a { color: var(--link); text-decoration: none; }
 a:hover { text-decoration: underline; text-underline-offset: 3px; }
 
-:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 3px; }
+:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 3px; border-radius: 3px; }
 
 /* One container for the whole page, so the hero copy, the prose and the product
    window all hang off a single left edge. Measure comes from the text itself. */
@@ -129,7 +129,7 @@ kbd {
   cursor: pointer;
   transition: opacity .15s ease, background-color .15s ease;
 }
-.btn-primary { background: var(--ink); color: var(--paper); }
+.btn-primary { background: var(--accent); color: var(--on-accent); font-weight: 600; }
 .btn-primary:hover { opacity: .84; text-decoration: none; }
 .btn-primary:active { opacity: .7; }
 .btn-quiet { background: transparent; color: var(--ink); border-color: var(--rule); }

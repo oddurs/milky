@@ -115,22 +115,48 @@ public struct Theme: Sendable {
     #endif
 }
 
-/// Notes' palette: a warm yellow accent, near-black text, and greys that are
-/// slightly warm rather than pure neutral.
+/// Apple Notes' structure with our own accent: #C8FF00.
+///
+/// Lime is a *fill* colour, not an ink one. It carries 17.8:1 against black and
+/// only 1.2:1 against white, so it can front a filled row or a checkbox but
+/// cannot be text, a caret or a hairline on a light ground. `accentInk` is the
+/// darkened companion for those, and it flips back to the pure lime in dark mode
+/// where the contrast runs the other way.
 public enum Palette {
-    public static let accent = Color(red: 0.96, green: 0.72, blue: 0.15)
-    public static let accentDeep = Color(red: 0.87, green: 0.60, blue: 0.05)
+    /// #C8FF00 — fills only.
+    public static let accent = Color(red: 0.784, green: 1.0, blue: 0.0)
+    public static let accentDeep = Color(red: 0.667, green: 0.855, blue: 0.0)
+
+    /// Text drawn on a lime fill. Black clears 17.8:1; white manages 1.2:1.
+    public static let onAccent = Color(red: 0.055, green: 0.075, blue: 0.0)
 
     #if canImport(AppKit)
-    public static let accentPlatform = NSColor(red: 0.96, green: 0.72, blue: 0.15, alpha: 1)
+    public static let accentPlatform = NSColor(red: 0.784, green: 1.0, blue: 0.0, alpha: 1)
+
+    /// The accent as ink: dark olive on light grounds, pure lime on dark ones.
+    /// Used for carets, list markers, icons and links — anything thin.
+    public static let accentInkPlatform = NSColor(name: nil) { appearance in
+        appearance.isDark
+            ? NSColor(red: 0.784, green: 1.0, blue: 0.0, alpha: 1)
+            : NSColor(red: 0.353, green: 0.451, blue: 0.0, alpha: 1)
+    }
+
+    public static let onAccentPlatform = NSColor(red: 0.055, green: 0.075, blue: 0.0, alpha: 1)
+
+    /// SwiftUI view of `accentInkPlatform`, for icons and labels.
+    public static let accentInk = Color(nsColor: accentInkPlatform)
 
     /// Body text. Not pure black — Notes sits a touch softer.
     public static let text = NSColor(name: nil) { appearance in
-        appearance.isDark ? NSColor(white: 0.92, alpha: 1) : NSColor(white: 0.11, alpha: 1)
+        appearance.isDark
+            ? NSColor(red: 0.925, green: 0.929, blue: 0.914, alpha: 1)
+            : NSColor(red: 0.098, green: 0.102, blue: 0.090, alpha: 1)
     }
 
     public static let secondaryText = NSColor(name: nil) { appearance in
-        appearance.isDark ? NSColor(white: 0.62, alpha: 1) : NSColor(white: 0.45, alpha: 1)
+        appearance.isDark
+            ? NSColor(red: 0.596, green: 0.604, blue: 0.580, alpha: 1)
+            : NSColor(red: 0.427, green: 0.435, blue: 0.412, alpha: 1)
     }
 
     /// Markdown punctuation: present, but pushed well back.
@@ -168,14 +194,14 @@ public enum Palette {
 
     public static let tagBackground = NSColor(name: nil) { appearance in
         appearance.isDark
-            ? NSColor(red: 0.96, green: 0.72, blue: 0.15, alpha: 0.18)
-            : NSColor(red: 0.96, green: 0.72, blue: 0.15, alpha: 0.24)
+            ? NSColor(red: 0.784, green: 1.0, blue: 0.0, alpha: 0.20)
+            : NSColor(red: 0.784, green: 1.0, blue: 0.0, alpha: 0.38)
     }
 
     public static let tagText = NSColor(name: nil) { appearance in
         appearance.isDark
-            ? NSColor(red: 0.96, green: 0.78, blue: 0.36, alpha: 1)
-            : NSColor(red: 0.55, green: 0.38, blue: 0.02, alpha: 1)
+            ? NSColor(red: 0.831, green: 0.949, blue: 0.478, alpha: 1)
+            : NSColor(red: 0.278, green: 0.353, blue: 0.0, alpha: 1)
     }
     #endif
 }

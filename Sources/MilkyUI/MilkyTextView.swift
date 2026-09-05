@@ -40,7 +40,8 @@ public final class MilkyTextView: NSTextView {
         textView.isVerticallyResizable = true
         textView.isHorizontallyResizable = false
         textView.autoresizingMask = [NSView.AutoresizingMask.width]
-        textView.insertionPointColor = Palette.accentPlatform.blended(withFraction: 0.35, of: .textColor) ?? .textColor
+        // The caret is a 1px mark: pure lime would be invisible on white.
+        textView.insertionPointColor = Palette.accentInkPlatform
         textView.textContainerInset = NSSize(width: 0, height: 0)
         textView.smartInsertDeleteEnabled = false
 
@@ -197,6 +198,7 @@ public final class MilkyTextView: NSTextView {
             path.stroke()
 
         case .checkboxDone:
+            // A filled disc is exactly what lime is good at.
             let rect = NSRect(x: centre.x - size / 2, y: centre.y - size / 2, width: size, height: size)
             Palette.accentPlatform.setFill()
             NSBezierPath(ovalIn: rect).fill()
@@ -209,7 +211,8 @@ public final class MilkyTextView: NSTextView {
             tick.lineWidth = max(1.4, size * 0.13)
             tick.lineCapStyle = .round
             tick.lineJoinStyle = .round
-            NSColor.white.setStroke()
+            // On lime the tick has to be dark, not white.
+            Palette.onAccentPlatform.setStroke()
             tick.stroke()
         }
     }

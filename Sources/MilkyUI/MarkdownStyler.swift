@@ -214,7 +214,7 @@ public enum MarkdownStyler {
                 return .marker(dash, .bullet)
 
             case .listNumber:
-                storage.addAttribute(.foregroundColor, value: Palette.accentPlatform, range: range)
+                storage.addAttribute(.foregroundColor, value: Palette.accentInkPlatform, range: range)
                 return nil
 
             case .taskOpen, .taskDone:
@@ -262,8 +262,13 @@ public enum MarkdownStyler {
         case .inlineCode:
             storage.addAttribute(.font, value: theme.monoFont(size: theme.bodySize * 0.92), range: range)
             storage.addAttribute(.foregroundColor, value: Palette.codeText, range: range)
-        case .link, .wikiLink:
+        case .link:
+            // Leaving the app: the system's blue is what a Mac user reads as a URL.
             storage.addAttribute(.foregroundColor, value: Palette.link, range: range)
+            storage.addAttribute(.cursor, value: NSCursor.pointingHand, range: range)
+        case .wikiLink:
+            // Staying inside the vault: the accent distinguishes it from a URL.
+            storage.addAttribute(.foregroundColor, value: Palette.accentInkPlatform, range: range)
             storage.addAttribute(.cursor, value: NSCursor.pointingHand, range: range)
         case .linkURL:
             storage.addAttribute(.foregroundColor, value: isActive ? Palette.syntaxActive : Palette.syntax, range: range)

@@ -76,7 +76,7 @@ struct SidebarView: View {
                     .foregroundStyle(.tertiary)
             }
         } icon: {
-            Image(systemName: symbol).foregroundStyle(Palette.accent)
+            Image(systemName: symbol).foregroundStyle(Palette.accentInk)
         }
         .tag(selection)
     }
@@ -107,7 +107,7 @@ struct SidebarView: View {
                         .foregroundStyle(.tertiary)
                 }
             } icon: {
-                Image(systemName: "folder").foregroundStyle(Palette.accent)
+                Image(systemName: "folder").foregroundStyle(Palette.accentInk)
             }
             .tag(SidebarSelection.folder(node.path))
         }
