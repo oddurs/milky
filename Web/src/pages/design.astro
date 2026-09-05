@@ -1,0 +1,237 @@
+---
+import Base from '../layouts/Base.astro';
+import tokens from '../../../DesignSystem/tokens.json';
+
+// Rendered from the same file the Swift and CSS tokens are generated from, so
+// this page cannot describe a system the apps don't have.
+const isToken = ([key]: [string, unknown]) => !key.startsWith('_');
+const colors = Object.entries(tokens.color).filter(isToken) as [string, any][];
+const webOnly = Object.entries(tokens.webOnly).filter(isToken) as [string, any][];
+const space = Object.entries(tokens.space).filter(isToken) as [string, number][];
+const radius = Object.entries(tokens.radius).filter(isToken) as [string, number][];
+const motion = Object.entries(tokens.motion).filter(isToken) as [string, number][];
+
+const kebab = (s: string) => s.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase();
+
+// The Apple text styles the UI roles are built on. Sizes shown are macOS's.
+const roles = [
+  { name: 'documentTitle', style: '.title2 / bold', size: 17, weight: 700, use: 'The note title in the editor header' },
+  { name: 'rowTitle', style: '.body / semibold', size: 13, weight: 600, use: 'A note’s name in the list' },
+  { name: 'sidebarItem', style: '.body', size: 13, weight: 400, use: 'A row in the sidebar' },
+  { name: 'emptyTitle', style: '.headline', size: 13, weight: 600, use: 'Headline of an empty state' },
+  { name: 'rowMeta', style: '.caption', size: 10, weight: 400, use: 'Date and snippet under a row' },
+  { name: 'documentMeta', style: '.caption', size: 10, weight: 400, use: 'Timestamp under a title' },
+  { name: 'sectionLabel', style: '.caption / semibold', size: 10, weight: 600, use: 'Folders, Tags' },
+  { name: 'status', style: '.caption', size: 10, weight: 400, use: 'Word count, file path' },
+  { name: 'badge', style: '.caption / tabular', size: 10, weight: 400, use: 'Counts on sidebar rows' },
+];
+---
+
+<Base
+  title="Milky Design System"
+  description="The tokens, typography roles and components behind Milky's Mac app and site."
+>
+  <main class="ds">
+    <header>
+      <h1>Design system</h1>
+      <p class="lede">
+        One source of truth for two platforms. Everything below is rendered from
+        <code>DesignSystem/tokens.json</code>, the same file the Swift and CSS
+        tokens are generated from — so this page cannot drift from the apps.
+      </p>
+    </header>
+
+    <section>
+      <h2><span class="hash">##</span>Colour</h2>
+      <p>
+        Semantic roles, never hues. Each resolves in both appearances, so no call
+        site branches on the theme. Switch your system appearance and every swatch
+        below follows.
+      </p>
+      <ul class="swatches">
+        {colors.map(([name, token]) => (
+          <li>
+            <span class="chip" style={`background: var(--${kebab(name)})`}></span>
+            <div>
+              <code>{kebab(name)}</code>
+              {token.use && <p>{token.use}</p>}
+            </div>
+          </li>
+        ))}
+      </ul>
+
+      <div class="rule-note">
+        <p><strong>The accent is a fill, not an ink.</strong></p>
+        <p>
+          <code>#C8FF00</code> carries 17.8:1 against black and 1.2:1 against
+          white. Used as text or a caret on a light ground it disappears — and
+          dark-mode testing will never show you that. Fills take
+          <code>accent</code>; anything thin takes <code>accent-ink</code>; text
+          sitting on a fill takes <code>on-accent</code>.
+        </p>
+        <div class="demo">
+          <span class="demo-fill">Fill · on-accent</span>
+          <span class="demo-ink">Ink · accent-ink</span>
+          <span class="demo-bad">Ink · accent (1.2:1)</span>
+        </div>
+      </div>
+
+      <h3>Web only</h3>
+      <p>
+        The landing page rebuilds the Mac window in DOM. In the real app these are
+        system materials, and they must stay that way — hardcoding them in Swift
+        is how an app stops looking native.
+      </p>
+      <ul class="swatches">
+        {webOnly.map(([name]) => (
+          <li>
+            <span class="chip" style={`background: var(--${kebab(name)})`}></span>
+            <div><code>{kebab(name)}</code></div>
+          </li>
+        ))}
+      </ul>
+    </section>
+
+    <section>
+      <h2><span class="hash">##</span>Typography</h2>
+      <p>
+        UI type is built on Apple's semantic text styles rather than a table of
+        point sizes, so it picks up the right metrics per platform and follows
+        Dynamic Type. Sizes shown are macOS's; on iOS the same roles resolve
+        larger. Call sites use a role, never a font.
+      </p>
+      <table>
+        <thead>
+          <tr><th>Role</th><th>Text style</th><th>Where</th></tr>
+        </thead>
+        <tbody>
+          {roles.map((r) => (
+            <tr>
+              <td><span style={`font-size:${r.size}px;font-weight:${r.weight}`}>{r.name}</span></td>
+              <td><code>{r.style}</code></td>
+              <td class="muted">{r.use}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <p class="muted small">
+        Reading type — the note itself — is a separate scale the reader controls.
+        The chrome must not follow it: the sidebar should not grow when someone
+        bumps their note size up.
+      </p>
+    </section>
+
+    <section>
+      <h2><span class="hash">##</span>Space, radius, motion</h2>
+      <p>A 4pt grid, with two half-steps for optical work inside controls.</p>
+      <ul class="scale">
+        {space.map(([name, value]) => (
+          <li><span class="bar" style={`width:${value}px`}></span><code>{name}</code><span class="muted">{value}</span></li>
+        ))}
+      </ul>
+
+      <ul class="radii">
+        {radius.map(([name, value]) => (
+          <li>
+            <span class="box" style={`border-radius:${Math.min(value, 40)}px`}></span>
+            <code>{name}</code><span class="muted">{value}</span>
+          </li>
+        ))}
+      </ul>
+
+      <ul class="scale">
+        {motion.map(([name, value]) => (
+          <li><span class="bar" style={`width:${value * 400}px`}></span><code>{name}</code><span class="muted">{value}s</span></li>
+        ))}
+      </ul>
+      <p class="muted small">Every duration must no-op under <code>prefers-reduced-motion</code>.</p>
+    </section>
+
+    <section>
+      <h2><span class="hash">##</span>Components</h2>
+      <p>
+        Extracted because they were already duplicated, not invented up front.
+        Two copies is a coincidence; three is a component.
+      </p>
+      <dl class="components">
+        <div><dt>EmptyState</dt><dd>Three screens had written their own. An empty state is an instruction, not an apology.</dd></div>
+        <div><dt>SidebarRow</dt><dd>Folders, tags and All Notes each drew their own, and the icon colour had already diverged.</dd></div>
+        <div><dt>CountBadge</dt><dd>Tabular figures, so a column of counts doesn't shuffle as they change.</dd></div>
+      </dl>
+    </section>
+
+    <footer>
+      <a href={import.meta.env.BASE_URL}>← Back to Milky</a>
+    </footer>
+  </main>
+</Base>
+
+<style>
+  .ds {
+    max-width: 780px;
+    margin-inline: auto;
+    padding: clamp(40px, 7vw, 80px) clamp(20px, 4vw, 40px) var(--space-page);
+  }
+  header { margin-bottom: var(--space-page); }
+  section { padding-top: clamp(44px, 6vw, 72px); }
+  h3 { margin: var(--space-section) 0 var(--space-md); font-size: 1rem; }
+  p { max-width: 34em; text-wrap: pretty; }
+  .small { font-size: 14px; }
+  .muted { color: var(--ink-soft); }
+
+  .swatches, .scale, .radii { list-style: none; padding: 0; margin: var(--space-xxl) 0 0; }
+  .swatches li {
+    display: flex; align-items: center; gap: var(--space-lg);
+    padding: var(--space-md) 0; border-bottom: 1px solid var(--rule-soft);
+  }
+  .swatches p { margin: 2px 0 0; font-size: 13.5px; color: var(--ink-soft); }
+  .chip {
+    width: 44px; height: 44px; flex: none;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--rule);
+  }
+
+  .rule-note {
+    margin-top: var(--space-xxl);
+    padding-left: var(--space-xl);
+    border-left: 2px solid var(--accent-ink);
+  }
+  .rule-note p { font-size: 15px; }
+  .demo { display: flex; flex-wrap: wrap; gap: var(--space-md); margin-top: var(--space-lg); }
+  .demo span { padding: var(--space-sm) var(--space-lg); border-radius: var(--radius-capsule); font-size: 13px; font-weight: 600; }
+  .demo-fill { background: var(--accent); color: var(--on-accent); }
+  .demo-ink { color: var(--accent-ink); border: 1px solid var(--rule); }
+  .demo-bad { color: var(--accent); border: 1px solid var(--rule); }
+
+  table { width: 100%; border-collapse: collapse; margin-top: var(--space-xxl); }
+  th {
+    text-align: left; font-size: 12px; font-weight: 600;
+    color: var(--ink-faint); padding-bottom: var(--space-md);
+    border-bottom: 1px solid var(--rule);
+  }
+  td { padding: var(--space-lg) 0; border-bottom: 1px solid var(--rule-soft); font-size: 14px; vertical-align: baseline; }
+  td:first-child { padding-right: var(--space-xl); }
+
+  .scale li, .radii li {
+    display: flex; align-items: center; gap: var(--space-lg);
+    padding: var(--space-sm) 0; font-size: 13px;
+  }
+  .bar { height: 10px; border-radius: 2px; background: var(--accent); flex: none; }
+  .radii { display: flex; flex-wrap: wrap; gap: var(--space-xl); }
+  .radii li { flex-direction: column; align-items: flex-start; gap: var(--space-sm); }
+  .box { width: 64px; height: 64px; background: var(--accent); display: block; }
+
+  .components { margin-top: var(--space-xxl); }
+  .components > div {
+    display: grid; grid-template-columns: 10em 1fr; gap: var(--space-xl);
+    padding: var(--space-lg) 0; border-bottom: 1px solid var(--rule-soft);
+  }
+  .components dt { font-weight: 600; }
+  .components dd { margin: 0; color: var(--ink-soft); font-size: 15px; }
+
+  footer { padding-top: var(--space-page); }
+
+  @media (max-width: 640px) {
+    .components > div { grid-template-columns: 1fr; gap: var(--space-xs); }
+  }
+</style>

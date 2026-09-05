@@ -41,7 +41,7 @@ public final class MilkyTextView: NSTextView {
         textView.isHorizontallyResizable = false
         textView.autoresizingMask = [NSView.AutoresizingMask.width]
         // The caret is a 1px mark: pure lime would be invisible on white.
-        textView.insertionPointColor = Palette.accentInkPlatform
+        textView.insertionPointColor = Ink.accentInk
         textView.textContainerInset = NSSize(width: 0, height: 0)
         textView.smartInsertDeleteEnabled = false
 
@@ -137,25 +137,25 @@ public final class MilkyTextView: NSTextView {
                 guard let box = boundingBox(range, layoutManager, textContainer, origin) else { continue }
                 let inset = box.insetBy(dx: -6, dy: -4).offsetBy(dx: 0, dy: -1)
                 let path = NSBezierPath(roundedRect: inset, xRadius: 7, yRadius: 7)
-                Palette.codeBackground.setFill()
+                Ink.codeSurface.setFill()
                 path.fill()
 
             case .quote(let range):
                 guard let box = boundingBox(range, layoutManager, textContainer, origin) else { continue }
                 let bar = NSRect(x: box.minX + 1, y: box.minY, width: 3, height: box.height)
                 let path = NSBezierPath(roundedRect: bar, xRadius: 1.5, yRadius: 1.5)
-                Palette.quoteBar.setFill()
+                Ink.rule.setFill()
                 path.fill()
 
             case .rule(let range):
                 guard let box = boundingBox(range, layoutManager, textContainer, origin) else { continue }
                 let width = min(textContainer.size.width, bounds.width)
                 let line = NSRect(x: box.minX, y: box.midY - 0.5, width: width, height: 1)
-                Palette.rule.setFill()
+                Ink.rule.setFill()
                 line.fill()
 
             case .pill(let range, let style):
-                let fill = style == .code ? Palette.codeBackground : Palette.tagBackground
+                let fill = style == .code ? Ink.codeSurface : Ink.tagSurface
                 fill.setFill()
                 // A span can wrap across lines, so each line fragment gets its own pill.
                 for box in fragmentBoxes(range, layoutManager, textContainer, origin) {
@@ -187,20 +187,20 @@ public final class MilkyTextView: NSTextView {
             let diameter = max(theme.bodySize * 0.30, 4)
             let rect = NSRect(x: centre.x - diameter / 2, y: centre.y - diameter / 2,
                               width: diameter, height: diameter)
-            Palette.secondaryText.setFill()
+            Ink.inkSoft.setFill()
             NSBezierPath(ovalIn: rect).fill()
 
         case .checkboxOpen:
             let rect = NSRect(x: centre.x - size / 2, y: centre.y - size / 2, width: size, height: size)
             let path = NSBezierPath(ovalIn: rect.insetBy(dx: 0.75, dy: 0.75))
             path.lineWidth = 1.4
-            Palette.syntaxActive.setStroke()
+            Ink.syntaxActive.setStroke()
             path.stroke()
 
         case .checkboxDone:
             // A filled disc is exactly what lime is good at.
             let rect = NSRect(x: centre.x - size / 2, y: centre.y - size / 2, width: size, height: size)
-            Palette.accentPlatform.setFill()
+            Ink.accent.setFill()
             NSBezierPath(ovalIn: rect).fill()
 
             // NSTextView is flipped, so +y runs down: the tick dips before it rises.
@@ -212,7 +212,7 @@ public final class MilkyTextView: NSTextView {
             tick.lineCapStyle = .round
             tick.lineJoinStyle = .round
             // On lime the tick has to be dark, not white.
-            Palette.onAccentPlatform.setStroke()
+            Ink.onAccent.setStroke()
             tick.stroke()
         }
     }

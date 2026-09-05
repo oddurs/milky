@@ -10,7 +10,9 @@
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
-    "artifact": "astro build && node scripts/artifact.mjs"
+    "artifact": "astro build && node scripts/artifact.mjs",
+    "tokens": "node ../DesignSystem/generate.mjs",
+    "tokens:check": "node ../DesignSystem/generate.mjs --check"
   },
   "dependencies": {
     "astro": "^7.3.1"

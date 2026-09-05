@@ -69,17 +69,9 @@ struct NoteListView: View {
     }
 
     private var emptyState: some View {
-        VStack(spacing: 6) {
-            Text(model.searchText.isEmpty ? "No Notes" : "No Results")
-                .font(.system(size: 15, weight: .semibold))
-            if model.searchText.isEmpty {
-                Text("Press ⌘N to write one.")
-                    .font(.system(size: 12))
-                    .foregroundStyle(.tertiary)
-            }
-        }
-        .foregroundStyle(.secondary)
-        .padding(.bottom, 40)
+        model.searchText.isEmpty
+            ? EmptyState(title: "No Notes", detail: "Press ⌘N to write one.")
+            : EmptyState(title: "No Results", detail: "Nothing here matches “\(model.searchText)”.")
     }
 }
 
@@ -95,29 +87,26 @@ private struct NoteRow: View {
         // Text on the filled accent must be white — #7624F4 gives white 6.3:1 and
         // black only 3.3:1. When the list loses focus the fill drops to a neutral
         // tint and the text returns to normal, the way every Mac list behaves.
-        VStack(alignment: .leading, spacing: 2) {
+        VStack(alignment: .leading, spacing: Space.xxs) {
             Text(note.title)
-                .font(.system(size: 13, weight: .semibold))
                 .lineLimit(1)
-                .foregroundStyle(filled ? AnyShapeStyle(Palette.onAccent) : AnyShapeStyle(.primary))
-            HStack(spacing: 5) {
+                .textRole(.rowTitle, color: filled ? Palette.onAccent : Palette.ink)
+            HStack(spacing: Space.xs) {
                 Text(NoteRow.dateLabel(note.modified))
-                    .font(.system(size: 11.5))
-                    .foregroundStyle(filled ? AnyShapeStyle(Palette.onAccent.opacity(0.82)) : AnyShapeStyle(.secondary))
+                    .textRole(.rowMeta, color: filled ? Palette.onAccent.opacity(0.82) : Palette.inkSoft)
                 Text(note.snippet.isEmpty ? "No additional text" : note.snippet)
-                    .font(.system(size: 11.5))
-                    .foregroundStyle(filled ? AnyShapeStyle(Palette.onAccent.opacity(0.62)) : AnyShapeStyle(.tertiary))
                     .lineLimit(1)
+                    .textRole(.rowMeta, color: filled ? Palette.onAccent.opacity(0.62) : Palette.inkFaint)
             }
         }
-        .padding(.vertical, 7)
-        .padding(.horizontal, 8)
+        .padding(.vertical, Space.sm)
+        .padding(.horizontal, Space.md)
         .frame(maxWidth: .infinity, alignment: .leading)
         .contentShape(Rectangle())
         // No inset: an inset here lets SwiftUI's own selection fill show along the
         // edge, and the system's is blue.
         .listRowBackground(
-            RoundedRectangle(cornerRadius: 7, style: .continuous)
+            RoundedRectangle(cornerRadius: Radius.md, style: .continuous)
                 .fill(rowFill)
         )
     }

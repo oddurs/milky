@@ -18,7 +18,7 @@ html {
 
 body {
   margin: 0;
-  background: var(--paper);
+  background: var(--surface);
   color: var(--ink);
   /* No webfonts: the app is Mac-only and ships Apple's own type, so the page is
      set in the same metal the editor is. */
@@ -98,7 +98,7 @@ h2 .hash {
 code {
   font-family: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
   font-size: .92em;
-  background: var(--code-bg);
+  background: var(--code-surface);
   color: var(--code-ink);
   padding: .1em .32em;
   border-radius: .3em;

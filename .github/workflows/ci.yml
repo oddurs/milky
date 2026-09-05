@@ -16,6 +16,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # A colour changed in Swift but not in CSS is the failure this catches.
+      - name: Design tokens are in sync
+        run: node DesignSystem/generate.mjs --check
+
       - name: Build
         run: swift build
 

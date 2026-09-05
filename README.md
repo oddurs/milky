@@ -34,6 +34,23 @@ Requires the Swift toolchain. Full Xcode is **not** needed — the app builds wi
 SwiftPM against the Command Line Tools SDK and is bundled into a `.app` by
 `Scripts/bundle.sh`.
 
+## Design system
+
+`DesignSystem/tokens.json` is the single source of truth for colour, spacing,
+radius and motion. Swift and CSS token files are generated from it, and CI fails
+if either has drifted.
+
+```sh
+./Scripts/generate-tokens.sh            # write both
+./Scripts/generate-tokens.sh --check    # verify (runs in CI)
+```
+
+Typography is deliberately not in the token file: UI type is built on Apple's
+semantic text styles so it carries the right metrics per platform and follows
+Dynamic Type, while the note's own reading scale stays separate and
+reader-controlled. `DesignSystem/README.md` has the full map, and
+`/design` on the site renders it live from the same JSON.
+
 ## Roadmap
 
 Tracked with [cairn](https://github.com/oddurs/astralia): every item is a Markdown

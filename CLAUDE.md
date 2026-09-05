@@ -71,6 +71,22 @@ Serve over HTTP, not `file://`, when checking a page: Chrome sniffs UTF-8 for lo
 files and hid a missing `<meta charset>` that turned every em dash to mojibake the
 moment a real server omitted the header.
 
+## Design system
+
+`DesignSystem/tokens.json` is the source of truth; `Sources/MilkyUI/DesignSystem/
+Tokens.generated.swift` and `Web/src/styles/tokens.generated.css` are written from
+it by `Scripts/generate-tokens.sh`. Never edit a generated file — CI runs
+`--check` and will fail on drift.
+
+Four layers, and a view should only ever need the top one: tokens → typography
+primitives (`TextRole`) → components (`EmptyState`, `SidebarRow`, `CountBadge`) →
+views. A raw `.system(size:)` or hex value in a view means a layer below it is
+missing something; add it there.
+
+UI type uses Apple's semantic text styles, never point sizes — that is what
+carries per-platform metrics and Dynamic Type. The note's reading scale is
+separate (`Theme`) and the chrome must not follow it.
+
 ## The accent is a fill, not an ink
 
 The brand colour is **#C8FF00**. It carries 17.8:1 against black and **1.2:1

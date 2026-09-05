@@ -67,18 +67,8 @@ struct SidebarView: View {
 
     @ViewBuilder
     private func row(_ selection: SidebarSelection, title: String, symbol: String) -> some View {
-        Label {
-            HStack {
-                Text(title).lineLimit(1)
-                Spacer()
-                Text("\(model.noteCount(for: selection))")
-                    .font(.system(size: 11).monospacedDigit())
-                    .foregroundStyle(.tertiary)
-            }
-        } icon: {
-            Image(systemName: symbol).foregroundStyle(Palette.accentInk)
-        }
-        .tag(selection)
+        SidebarRow(symbol: symbol, title: title, count: model.noteCount(for: selection))
+            .tag(selection)
     }
 
     private struct FolderRow: View {
@@ -98,18 +88,9 @@ struct SidebarView: View {
         }
 
         private var label: some View {
-            Label {
-                HStack {
-                    Text(node.name).lineLimit(1)
-                    Spacer()
-                    Text("\(model.noteCount(for: .folder(node.path)))")
-                        .font(.system(size: 11).monospacedDigit())
-                        .foregroundStyle(.tertiary)
-                }
-            } icon: {
-                Image(systemName: "folder").foregroundStyle(Palette.accentInk)
-            }
-            .tag(SidebarSelection.folder(node.path))
+            SidebarRow(symbol: "folder", title: node.name,
+                       count: model.noteCount(for: .folder(node.path)))
+                .tag(SidebarSelection.folder(node.path))
         }
     }
 

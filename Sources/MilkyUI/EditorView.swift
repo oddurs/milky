@@ -45,8 +45,7 @@ struct EditorView: View {
                     if !focused { commitTitle(note) }
                 }
             Text(EditorView.timestamp(note.modified))
-                .font(.system(size: 11))
-                .foregroundStyle(.tertiary)
+                .textRole(.documentMeta)
         }
         .padding(.horizontal, 4)
         .frame(maxWidth: model.theme.maxContentWidth, alignment: .leading)
@@ -65,24 +64,17 @@ struct EditorView: View {
             Spacer()
             Text(note.relativePath).lineLimit(1).truncationMode(.head)
         }
-        .font(.system(size: 11))
-        .foregroundStyle(.tertiary)
-        .padding(.horizontal, 16)
-        .padding(.vertical, 6)
+        .textRole(.status)
+        .padding(.horizontal, Space.xl)
+        .padding(.vertical, Space.sm)
         .background(.ultraThinMaterial)
         .overlay(alignment: .top) { Divider().opacity(0.4) }
     }
 
     private var placeholder: some View {
-        VStack(spacing: 10) {
-            Image(systemName: "note.text")
-                .font(.system(size: 42, weight: .thin))
-                .foregroundStyle(.quaternary)
-            Text("No Note Selected")
-                .font(.system(size: 15, weight: .medium))
-                .foregroundStyle(.secondary)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        EmptyState(symbol: "note.text",
+                   title: "No Note Selected",
+                   detail: "Pick one from the list, or press ⌘N.")
     }
 
     private func commitTitle(_ note: Note) {

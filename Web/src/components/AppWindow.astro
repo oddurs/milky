@@ -124,10 +124,10 @@ const notes = [
   .window {
     --w-font: clamp(9.4px, 1.02vw, 13px);
     font-size: var(--w-font);
-    background: var(--win-bg);
-    border: 1px solid var(--win-rule);
+    background: var(--window-surface);
+    border: 1px solid var(--window-rule);
     border-radius: 11px;
-    box-shadow: var(--win-shadow);
+    box-shadow: var(--window-shadow);
     overflow: hidden;
     display: grid;
     grid-template-columns: 15.5em 20.5em 1fr;
@@ -143,8 +143,8 @@ const notes = [
     gap: .6em;
     height: 3.1em;
     padding: 0 1.1em;
-    background: var(--win-side);
-    border-bottom: 1px solid var(--win-rule);
+    background: var(--window-sidebar);
+    border-bottom: 1px solid var(--window-rule);
   }
   .light { width: .95em; height: .95em; border-radius: 50%; flex: none; }
   .light.r { background: #FF5F57; }
@@ -156,7 +156,7 @@ const notes = [
     width: 15em;
     height: 1.9em;
     border-radius: .45em;
-    background: var(--code-bg);
+    background: var(--code-surface);
     display: flex;
     align-items: center;
     padding: 0 .6em;
@@ -168,8 +168,8 @@ const notes = [
 
   /* Sidebar */
   .side {
-    background: var(--win-side);
-    border-right: 1px solid var(--win-rule);
+    background: var(--window-sidebar);
+    border-right: 1px solid var(--window-rule);
     padding: .9em .7em;
     display: flex;
     flex-direction: column;
@@ -206,7 +206,7 @@ const notes = [
   .side-foot {
     margin-top: auto;
     padding: .7em .6em .1em;
-    border-top: 1px solid var(--win-rule);
+    border-top: 1px solid var(--window-rule);
     display: flex;
     align-items: center;
     gap: .4em;
@@ -216,8 +216,8 @@ const notes = [
 
   /* Note list */
   .list {
-    background: var(--win-list);
-    border-right: 1px solid var(--win-rule);
+    background: var(--window-list);
+    border-right: 1px solid var(--window-rule);
     padding: .7em .55em;
     overflow: hidden;
   }
@@ -329,26 +329,26 @@ const notes = [
     left: .1em; top: .2em; bottom: .2em;
     width: 2.5px;
     border-radius: 2px;
-    background: var(--win-rule);
+    background: var(--window-rule);
   }
 
   /* Internal navigation takes the accent; external links keep the system blue. */
   .wiki { color: var(--accent-ink); }
 
   .tag {
-    background: var(--tag-bg);
+    background: var(--tag-surface);
     color: var(--tag-ink);
     padding: .08em .42em;
     border-radius: 980px;
     font-weight: 500;
   }
 
-  .rule-line { height: 1px; background: var(--win-rule); margin: .9em 0; border: 0; }
+  .rule-line { height: 1px; background: var(--window-rule); margin: .9em 0; border: 0; }
 
   .doc-foot {
     display: flex;
     padding: .55em 1.4em;
-    border-top: 1px solid var(--win-rule);
+    border-top: 1px solid var(--window-rule);
     color: var(--ink-faint);
     font-size: .9em;
   }

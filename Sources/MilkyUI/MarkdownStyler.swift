@@ -112,7 +112,7 @@ public enum MarkdownStyler {
 
     static func baseAttributes(_ theme: Theme) -> [NSAttributedString.Key: Any] {
         [.font: theme.bodyFont,
-         .foregroundColor: Palette.text,
+         .foregroundColor: Ink.ink,
          .paragraphStyle: bodyParagraphStyle(theme)]
     }
 
@@ -158,12 +158,12 @@ public enum MarkdownStyler {
             style.firstLineHeadIndent = 12
             style.headIndent = 12
             storage.addAttribute(.font, value: theme.monoFont(), range: paragraph)
-            storage.addAttribute(.foregroundColor, value: Palette.text, range: paragraph)
+            storage.addAttribute(.foregroundColor, value: Ink.ink, range: paragraph)
 
         case .blockquote:
             style.firstLineHeadIndent = 18
             style.headIndent = 18
-            storage.addAttribute(.foregroundColor, value: Palette.secondaryText, range: paragraph)
+            storage.addAttribute(.foregroundColor, value: Ink.inkSoft, range: paragraph)
             storage.addAttribute(.font,
                                  value: theme.font(size: theme.bodySize, italic: theme.typeface != .mono),
                                  range: paragraph)
@@ -181,7 +181,7 @@ public enum MarkdownStyler {
 
         case .frontmatter:
             storage.addAttribute(.font, value: theme.monoFont(size: theme.bodySize * 0.82), range: paragraph)
-            storage.addAttribute(.foregroundColor, value: Palette.secondaryText, range: paragraph)
+            storage.addAttribute(.foregroundColor, value: Ink.inkSoft, range: paragraph)
             style.lineHeightMultiple = 1.1
 
         default:
@@ -214,7 +214,7 @@ public enum MarkdownStyler {
                 return .marker(dash, .bullet)
 
             case .listNumber:
-                storage.addAttribute(.foregroundColor, value: Palette.accentInkPlatform, range: range)
+                storage.addAttribute(.foregroundColor, value: Ink.accentInk, range: range)
                 return nil
 
             case .taskOpen, .taskDone:
@@ -228,7 +228,7 @@ public enum MarkdownStyler {
                 return nil
 
             case .codeFence:
-                storage.addAttribute(.foregroundColor, value: Palette.syntax, range: range)
+                storage.addAttribute(.foregroundColor, value: Ink.syntax, range: range)
                 storage.addAttribute(.font, value: theme.monoFont(size: theme.bodySize * 0.8), range: range)
                 return nil
             case .heading(let level):
@@ -237,12 +237,12 @@ public enum MarkdownStyler {
                                      value: theme.font(size: theme.headingSize(level) * 0.58, weight: .semibold),
                                      range: range)
                 storage.addAttribute(.foregroundColor,
-                                     value: isActive ? Palette.syntaxActive : Palette.syntax,
+                                     value: isActive ? Ink.syntaxActive : Ink.syntax,
                                      range: range)
                 return nil
             default:
                 storage.addAttribute(.foregroundColor,
-                                     value: isActive ? Palette.syntaxActive : Palette.syntax,
+                                     value: isActive ? Ink.syntaxActive : Ink.syntax,
                                      range: range)
                 return nil
             }
@@ -258,28 +258,28 @@ public enum MarkdownStyler {
             addTrait(.italic, to: storage, range: range, theme: theme)
         case .strikethrough:
             storage.addAttribute(.strikethroughStyle, value: NSUnderlineStyle.single.rawValue, range: range)
-            storage.addAttribute(.foregroundColor, value: Palette.secondaryText, range: range)
+            storage.addAttribute(.foregroundColor, value: Ink.inkSoft, range: range)
         case .inlineCode:
             storage.addAttribute(.font, value: theme.monoFont(size: theme.bodySize * 0.92), range: range)
-            storage.addAttribute(.foregroundColor, value: Palette.codeText, range: range)
+            storage.addAttribute(.foregroundColor, value: Ink.codeInk, range: range)
         case .link:
             // Leaving the app: the system's blue is what a Mac user reads as a URL.
-            storage.addAttribute(.foregroundColor, value: Palette.link, range: range)
+            storage.addAttribute(.foregroundColor, value: Ink.link, range: range)
             storage.addAttribute(.cursor, value: NSCursor.pointingHand, range: range)
         case .wikiLink:
             // Staying inside the vault: the accent distinguishes it from a URL.
-            storage.addAttribute(.foregroundColor, value: Palette.accentInkPlatform, range: range)
+            storage.addAttribute(.foregroundColor, value: Ink.accentInk, range: range)
             storage.addAttribute(.cursor, value: NSCursor.pointingHand, range: range)
         case .linkURL:
-            storage.addAttribute(.foregroundColor, value: isActive ? Palette.syntaxActive : Palette.syntax, range: range)
+            storage.addAttribute(.foregroundColor, value: isActive ? Ink.syntaxActive : Ink.syntax, range: range)
             storage.addAttribute(.font, value: theme.monoFont(size: theme.bodySize * 0.85), range: range)
         case .tag:
-            storage.addAttribute(.foregroundColor, value: Palette.tagText, range: range)
+            storage.addAttribute(.foregroundColor, value: Ink.tagInk, range: range)
             storage.addAttribute(.font, value: theme.font(size: theme.bodySize * 0.95, weight: .medium), range: range)
         case .taskDone:
             storage.addAttribute(.strikethroughStyle, value: NSUnderlineStyle.single.rawValue, range: range)
-            storage.addAttribute(.strikethroughColor, value: Palette.secondaryText, range: range)
-            storage.addAttribute(.foregroundColor, value: Palette.secondaryText, range: range)
+            storage.addAttribute(.strikethroughColor, value: Ink.inkSoft, range: range)
+            storage.addAttribute(.foregroundColor, value: Ink.inkSoft, range: range)
         default:
             break
         }
