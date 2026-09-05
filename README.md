@@ -16,8 +16,19 @@ are deliberately free of AppKit so they can be shared with it.
 ```bash
 ./Scripts/bundle.sh          # builds build/Milky.app
 open build/Milky.app
-./Scripts/test.sh            # or: swift run milky-tests
+swift run milky-tests        # the test suite
+./Scripts/make-icon.sh       # regenerate Milky.icns from Resources/icon.html
 ```
+
+To build a disk image:
+
+```bash
+export CODESIGN_IDENTITY="Developer ID Application: … (TEAMID)"
+NOTARY_PROFILE=milky ./Scripts/release.sh      # → release/Milky-<version>.dmg
+./Scripts/release.sh --allow-unsigned          # local-only, Gatekeeper will refuse it
+```
+
+Version, bundle id and deployment target live in `Scripts/version.sh`.
 
 Requires the Swift toolchain. Full Xcode is **not** needed — the app builds with
 SwiftPM against the Command Line Tools SDK and is bundled into a `.app` by

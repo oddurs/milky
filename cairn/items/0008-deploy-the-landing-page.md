@@ -2,7 +2,7 @@
 id: 8
 title: Deploy the landing page
 type: chore
-status: planned
+status: done
 milestone: v0.1
 labels:
 - release

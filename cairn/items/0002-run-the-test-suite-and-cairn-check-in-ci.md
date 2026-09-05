@@ -2,7 +2,7 @@
 id: 2
 title: Run the test suite and cairn check in CI
 type: chore
-status: doing
+status: done
 milestone: v0.1
 assignee: Oddur Sigurdsson
 labels:
