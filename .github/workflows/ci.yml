@@ -61,8 +61,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # cairn-md is not on crates.io yet, so install from its repository.
+      # Switch to `cargo install cairn-md --locked` once it is published.
       - name: Install cairn
-        run: cargo install cairn-md --locked
+        run: cargo install --git https://github.com/oddurs/cairn --locked
 
       - name: Validate items against the schema
         run: cairn check
