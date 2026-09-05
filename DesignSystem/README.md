@@ -115,6 +115,35 @@ breaks; plus the full inline set including wiki links and tags. Setext headings,
 reference links, HTML, definition lists, emoji shortcodes and math are
 deliberately out — each with a reason recorded in the JSON.
 
+## Math
+
+Not KaTeX. KaTeX is JavaScript, and running it would mean a `WKWebView` per
+formula inside an `NSTextView` — slow, and hostile to inline math. `MathRenderer`
+in `MilkyCore` is a TeX-subset typesetter that returns **one entry per source
+character**, each carrying a glyph to draw (or none) plus a style.
+
+That 1:1 mapping is the whole trick. `MilkyTextView` is the layout manager's
+delegate and uses `shouldGenerateGlyphs` to swap a glyph and mark the characters
+it stands in for as `.null`. `\alpha` is six characters that draw as one α and
+five nothings — and the file still says `\alpha`. Selection, copy and save all
+see the source.
+
+The caret's line shows its TeX, the same reveal every other construct uses.
+
+Covered: ~150 commands, scripts (including `x^\infty`), `\frac`, `\sqrt` with a
+drawn bar, `\mathbb`, and the TeX conventions for italic variables and upright
+function names. Not covered: stacked fractions (`\frac{a}{b}` draws as `a⁄b`,
+since stacking needs its own line layout), matrices and `\begin{…}`.
+
+Two traps, both paid for once:
+
+- **A font must cover the replacement *and* the character it replaces.** AppKit
+  resolves font substitution before the glyph delegate runs, so a font that draws
+  ∈ but not the backslash it stands in for gets swapped out underneath you, and
+  the substitution silently never happens.
+- **Emit one decoration per radical, not per character.** A per-glyph overline
+  draws a dashed bar with a gap at every letter boundary.
+
 ## Syntax highlighting
 
 `CodeHighlighter` lives in `MilkyCore`, so iOS gets it for free. It is a lexer,

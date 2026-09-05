@@ -11,6 +11,9 @@ public final class MilkyTextView: NSTextView {
     var onTextChange: ((String) -> Void)?
 
     private var links: [(NSRange, String, TokenKind)] = []
+    /// Character index → the glyph to draw there, or nil to draw nothing.
+    /// Rebuilt on every restyle and read back by the layout manager delegate.
+    private var mathGlyphs: [Int: Character?] = [:]
     private var isRestyling = false
     private var restyleWork: DispatchWorkItem?
     private var lastActiveParagraph: NSRange?
@@ -44,6 +47,9 @@ public final class MilkyTextView: NSTextView {
         textView.insertionPointColor = Ink.accentInk
         textView.textContainerInset = NSSize(width: 0, height: 0)
         textView.smartInsertDeleteEnabled = false
+
+        // The delegate performs math glyph substitution.
+        layout.delegate = textView
 
         let scroll = NSScrollView()
         scroll.hasVerticalScroller = true
@@ -92,6 +98,17 @@ public final class MilkyTextView: NSTextView {
         let output = MarkdownStyler.apply(to: storage, theme: theme, activeParagraph: active)
         decorations = output.decorations
         links = output.links
+
+        // Glyph generation is cached, so the layout manager has to be told the
+        // substitutions changed before it will ask us again.
+        if output.mathGlyphs != mathGlyphs || !mathGlyphs.isEmpty {
+            mathGlyphs = output.mathGlyphs
+            layoutManager?.invalidateGlyphs(forCharacterRange: NSRange(location: 0, length: storage.length),
+                                            changeInLength: 0,
+                                            actualCharacterRange: nil)
+        } else {
+            mathGlyphs = output.mathGlyphs
+        }
         setSelectedRange(selection)
         typingAttributes = MarkdownStyler.baseAttributes(theme)
         isRestyling = false
@@ -163,6 +180,20 @@ public final class MilkyTextView: NSTextView {
                                        width: box.width + 6, height: box.height - 2)
                     let radius: CGFloat = style == .tag ? inset.height / 2 : 4
                     NSBezierPath(roundedRect: inset, xRadius: radius, yRadius: radius).fill()
+                }
+
+            case .overline(let range):
+                // The bar of a radical. Positioned off the baseline and the font's
+                // ascender — a line box is far taller than the glyphs in it, so
+                // measuring from its top leaves the bar floating.
+                guard let anchor = markerAnchor(range, layoutManager, textContainer, origin),
+                      NSMaxRange(range) <= (string as NSString).length else { continue }
+                let font = (textStorage?.attribute(.font, at: range.location, effectiveRange: nil)
+                            as? NSFont) ?? theme.bodyFont
+                Ink.ink.setFill()
+                for box in fragmentBoxes(range, layoutManager, textContainer, origin) {
+                    let y = anchor.1 - font.ascender * 0.86
+                    NSRect(x: box.minX, y: y, width: box.width, height: 1).fill()
                 }
 
             case .marker(let range, let glyph):
@@ -418,6 +449,70 @@ public final class MilkyTextView: NSTextView {
         super.setFrameSize(newSize)
         let width = min(theme.maxContentWidth, newSize.width - theme.editorHorizontalInset * 2)
         textContainer?.size = NSSize(width: max(width, 120), height: CGFloat.greatestFiniteMagnitude)
+    }
+}
+#endif
+
+#if canImport(AppKit)
+import CoreText
+
+// MARK: - Math glyph substitution
+
+extension MilkyTextView: NSLayoutManagerDelegate {
+
+    /// Draws `\alpha` as `α` without editing a byte of the file.
+    ///
+    /// This is the documented way to show something other than the characters in
+    /// storage: swap a glyph, and mark the ones it stands in for as `.null` so
+    /// they take no space. Selection, copy and save all still see the source —
+    /// which is the whole point, since the file must stay what the reader typed.
+    public func layoutManager(_ layoutManager: NSLayoutManager,
+                              shouldGenerateGlyphs glyphs: UnsafePointer<CGGlyph>,
+                              properties: UnsafePointer<NSLayoutManager.GlyphProperty>,
+                              characterIndexes: UnsafePointer<Int>,
+                              font: NSFont,
+                              forGlyphRange glyphRange: NSRange) -> Int {
+        guard !mathGlyphs.isEmpty else { return 0 }
+
+        var newGlyphs = [CGGlyph](repeating: 0, count: glyphRange.length)
+        var newProperties = [NSLayoutManager.GlyphProperty](repeating: [], count: glyphRange.length)
+        var touched = false
+
+        for i in 0 ..< glyphRange.length {
+            newGlyphs[i] = glyphs[i]
+            newProperties[i] = properties[i]
+
+            guard let replacement = mathGlyphs[characterIndexes[i]] else { continue }
+
+            guard let character = replacement else {
+                // A character the rendering absorbs: `\`, `{`, the letters of a
+                // command name. Null glyphs occupy no width.
+                newProperties[i] = .null
+                touched = true
+                continue
+            }
+
+            // Only BMP characters can be looked up this way; anything needing a
+            // surrogate pair keeps its source glyph rather than drawing wrong.
+            let utf16 = Array(String(character).utf16)
+            guard utf16.count == 1 else { continue }
+
+            var source = utf16[0]
+            var mapped: CGGlyph = 0
+            if CTFontGetGlyphsForCharacters(font, &source, &mapped, 1), mapped != 0 {
+                newGlyphs[i] = mapped
+                touched = true
+            }
+        }
+
+        guard touched else { return 0 }
+
+        layoutManager.setGlyphs(&newGlyphs,
+                                properties: &newProperties,
+                                characterIndexes: UnsafeMutablePointer(mutating: characterIndexes),
+                                font: font,
+                                forGlyphRange: glyphRange)
+        return glyphRange.length
     }
 }
 #endif

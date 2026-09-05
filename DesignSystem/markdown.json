@@ -24,7 +24,8 @@
     { "name": "Horizontal rule",  "syntax": "---   ***   ___",         "render": "A drawn hairline; the characters themselves go clear",    "token": "horizontalRule", "status": "full" },
     { "name": "Frontmatter",      "syntax": "--- at the top of a file", "render": "Monospaced and dimmed, treated as metadata not prose",   "token": "frontmatter",    "status": "full" },
     { "name": "Footnote",         "syntax": "[^1] and [^1]: text",     "render": "Reference raised and small; definition in the accent ink", "token": "footnoteRef/Def", "status": "full" },
-    { "name": "Hard break",       "syntax": "Two trailing spaces, or \\", "render": "Underlined, because the source is otherwise invisible",  "token": "hardBreak",      "status": "full" }
+    { "name": "Hard break",       "syntax": "Two trailing spaces, or \\", "render": "Underlined, because the source is otherwise invisible",  "token": "hardBreak",      "status": "full" },
+    { "name": "Display math",     "syntax": "$$ on its own line, then TeX", "render": "Typeset in New York across the lines between the fences", "token": "mathBlock",  "status": "partial", "note": "A TeX subset — see Math below" }
   ],
 
   "inline": [
@@ -37,7 +38,8 @@
     { "name": "Autolink",       "syntax": "https://example.com",  "render": "Coloured and clickable in place",                   "token": "link",          "status": "full" },
     { "name": "Wiki link",      "syntax": "[[Note]]   [[Note|as]]", "render": "Accent ink — internal navigation, not a URL",     "token": "wikiLink",      "status": "full" },
     { "name": "Tag",            "syntax": "#tag",                 "render": "A pill; collected into the sidebar",                "token": "tag",           "status": "full" },
-    { "name": "Image",          "syntax": "![alt](src)",          "render": "Styled as a link",                                  "token": "link",          "status": "partial", "note": "Parsed, but the image is not shown inline yet — item 0012" }
+    { "name": "Image",          "syntax": "![alt](src)",          "render": "Styled as a link",                                  "token": "link",          "status": "partial", "note": "Parsed, but the image is not shown inline yet — item 0012" },
+    { "name": "Inline math",    "syntax": "$x^2$",                "render": "Typeset in place; the dollars dim like any marker", "token": "mathInline",    "status": "partial", "note": "A TeX subset — see Math below" }
   ],
 
   "unsupported": [
@@ -45,9 +47,30 @@
     { "name": "Reference links",   "syntax": "[text][ref]",        "why": "Rarely written by hand; the inline form covers the same ground." },
     { "name": "Inline and block HTML", "syntax": "<div>…</div>",   "why": "Notes are prose. Rendering HTML would mean a second representation to keep in sync." },
     { "name": "Definition lists",  "syntax": "Term\n: definition", "why": "Not part of GFM." },
-    { "name": "Emoji shortcodes",  "syntax": ":smile:",            "why": "macOS has a system emoji picker; the literal character round-trips everywhere." },
-    { "name": "Math",              "syntax": "$x^2$",              "why": "Not part of GFM, and it needs a typesetter." }
+    { "name": "Emoji shortcodes",  "syntax": ":smile:",            "why": "macOS has a system emoji picker; the literal character round-trips everywhere." }
   ],
+
+  "math": {
+    "_about": "Why this is not KaTeX, and what the subset covers.",
+    "approach": [
+      "KaTeX is JavaScript. Running it would mean a WKWebView per formula inside an NSTextView — slow, and hostile to inline math.",
+      "Instead a small TeX-subset typesetter produces attributes and glyph substitutions, so an equation lives in the same text storage as the prose around it.",
+      "Nothing is rewritten. `\\alpha` is six characters that draw as one α and five nothings, using the layout manager's glyph substitution. Select it, copy it, save it — you get back exactly what you typed.",
+      "The caret's own line shows its source, the same reveal every other construct uses. There is always a way to see and edit the TeX."
+    ],
+    "supported": [
+      "Around 150 commands: Greek, operators, relations, set theory, logic, big operators, arrows.",
+      "Superscripts and subscripts, including nested ones and commands as bodies (x^\\infty).",
+      "\\frac, \\sqrt with a drawn radical bar, \\mathbb.",
+      "TeX conventions: single letters italic, digits and function names upright."
+    ],
+    "limits": [
+      "Fractions do not stack. \\frac{a}{b} draws as a⁄b, because a true two-level fraction needs its own line layout.",
+      "Matrices, alignment environments and \\begin{…} are not handled.",
+      "A symbol no available font can draw leaves its whole expression as source rather than showing a half-substituted line.",
+      "Currency is protected: a dollar followed by a space, or preceded by one at the close, is prose — so \"$5 and $10\" stays text."
+    ]
+  },
 
   "syntaxRoles": [
     { "role": "keyword",     "token": "codeKeyword",     "what": "Declarations and control flow. Carries the brand hue." },

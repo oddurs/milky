@@ -272,6 +272,60 @@ t.suite("syntax highlighting") {
     t.expect(disjoint, "spans are ordered and non-overlapping")
 }
 
+t.suite("math") {
+    func shown(_ src: String) -> String { MathRenderer.plainText(src) }
+
+    // One entry per source character is the contract the editor relies on.
+    for sample in ["E = mc^2", "\\alpha + \\beta", "\\frac{a}{b}", "\\sqrt{x_1}", "", "\\"] {
+        t.equal(MathRenderer.render(sample).count, sample.count,
+                "render is 1:1 with the source for \"\(sample)\"")
+    }
+
+    t.equal(shown("\\alpha"), "α", "a command becomes one glyph")
+    t.equal(shown("\\alpha + \\beta"), "α + β", "several commands")
+    t.equal(shown("x \\in \\mathbb{R}"), "x ∈ ℝ", "blackboard bold")
+    t.equal(shown("\\sum_{i=1}^{n}"), "∑i=1n", "scripts keep their content")
+    t.equal(shown("\\frac{a}{b}"), "a⁄b", "fractions use the fraction slash")
+    t.equal(shown("\\sqrt{2}"), "√2", "radicals")
+    t.equal(shown("E = mc^2"), "E = mc2", "superscript content survives")
+
+    // Unknown commands are shown as written rather than silently swallowed.
+    t.equal(shown("\\wobble"), "\\wobble", "unknown commands are left alone")
+
+    let scripted = MathRenderer.render("x^2")
+    t.equal(scripted[1].display, nil, "the caret itself is hidden")
+    t.equal(scripted[2].style.raise, .superscript, "the exponent is raised")
+    t.equal(scripted[2].style.scriptDepth, 1, "and shrinks one level")
+
+    let sub = MathRenderer.render("x_i")
+    t.equal(sub[2].style.raise, .subscript, "underscore lowers")
+
+    let radical = MathRenderer.render("\\sqrt{x}")
+    t.expect(radical.contains { $0.style.overline }, "the radicand is overlined")
+
+    t.equal(MathRenderer.render("x")[0].style.italic, true, "variables are italic")
+    t.equal(MathRenderer.render("2")[0].style.italic, false, "digits are upright")
+    t.equal(shown("\\sin x"), "sin x", "function names are set upright")
+
+    // Malformed input must not trap.
+    for broken in ["\\frac{a", "\\sqrt{", "x^", "{{{", "}}}", "\\mathbb{"] {
+        t.equal(MathRenderer.render(broken).count, broken.count, "malformed input is safe: \(broken)")
+    }
+}
+
+t.suite("math in markdown") {
+    t.expect(kinds("Let $x^2$ be").contains(.mathInline), "inline math")
+    t.expect(kinds("$$\nE = mc^2\n$$").contains(.mathBlock), "display math")
+    // A price is not an equation.
+    t.expect(!kinds("It costs $5 and $10 total").contains(.mathInline), "currency is not math")
+    t.expect(!kinds("$ x $").contains(.mathInline), "a space after the opener disqualifies it")
+
+    let tokens = MarkdownSyntax.tokenize("Let $x^2$ be")
+    let body = tokens.first { $0.kind == .mathInline && $0.role == .content }
+    t.equal(body.map { ("Let $x^2$ be" as NSString).substring(with: $0.range) }, "x^2",
+            "the delimiters are markers, the body is content")
+}
+
 t.suite("git sync") {
     let sandbox = URL(fileURLWithPath: NSTemporaryDirectory())
         .appending(path: "milky-git-\(ProcessInfo.processInfo.processIdentifier)")

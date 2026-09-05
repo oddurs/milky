@@ -33,6 +33,10 @@ public enum TokenKind: Equatable, Sendable {
     /// `[^1]` in the text, and `[^1]: …` where it is defined.
     case footnoteRef
     case footnoteDef
+    /// `$x^2$` — TeX between single dollars.
+    case mathInline
+    /// `$$ … $$` on its own lines.
+    case mathBlock
 }
 
 /// Whether a span is punctuation the reader shouldn't have to look at
@@ -78,6 +82,7 @@ public enum MarkdownSyntax {
         var inFrontmatter = false
         var lineIndex = 0
         var inTable = false
+        var inMathBlock = false
 
         // Bound by `<` and advance by the line's full length: at `location == length`
         // lineRange(for:) reports the *last* line rather than an empty range, which
@@ -121,6 +126,16 @@ public enum MarkdownSyntax {
             }
             if inFence {
                 tokens.append(Token(contentRange, .codeBlock, .content, payload: fenceInfo))
+                continue
+            }
+
+            if trimmed == "$$" {
+                inMathBlock.toggle()
+                tokens.append(Token(contentRange, .mathBlock, .marker))
+                continue
+            }
+            if inMathBlock {
+                tokens.append(Token(contentRange, .mathBlock, .content))
                 continue
             }
 
@@ -305,6 +320,18 @@ public enum MarkdownSyntax {
         for m in regexCache.matches("(?<![(\\w])https?://[^\\s)\\]]+", in: text) where claim(m.range) {
             tokens.append(Token(shift(m.range, by: offset), .link, .content,
                                 payload: ns.substring(with: m.range)))
+        }
+
+        // $x^2$. The rules keep prices out: no space after the opening dollar,
+        // none before the closing one, and no digit straight after it — so
+        // "$5 and $10" stays prose.
+        for m in regexCache.matches("(?<![\\\\$])\\$(?!\\s)((?:[^$\\n]|\\\\\\$)+?)(?<![\\s\\\\])\\$(?!\\d)", in: text)
+        where claim(m.range) {
+            let body = m.range(at: 1)
+            tokens.append(Token(NSRange(location: offset + m.range.location, length: 1), .mathInline, .marker))
+            tokens.append(Token(shift(body, by: offset), .mathInline, .content,
+                                payload: ns.substring(with: body)))
+            tokens.append(Token(NSRange(location: offset + NSMaxRange(body), length: 1), .mathInline, .marker))
         }
 
         // [^1] and its definition. Checked before tags so [^1] is not read as one.

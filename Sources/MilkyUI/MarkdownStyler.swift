@@ -1,5 +1,6 @@
 #if canImport(AppKit)
 import AppKit
+import CoreText
 import MilkyCore
 
 /// Block backgrounds and rules that can't be expressed as text attributes —
@@ -12,6 +13,8 @@ public enum BlockDecoration: Equatable {
     /// can only give square corners.
     case pill(NSRange, PillStyle)
     case marker(NSRange, MarkerGlyph)
+    /// The bar of a radical, drawn over its radicand.
+    case overline(NSRange)
 }
 
 public enum PillStyle: Equatable { case code, tag }
@@ -28,6 +31,10 @@ public enum MarkdownStyler {
     public struct Output {
         public var decorations: [BlockDecoration]
         public var links: [(NSRange, String, TokenKind)]
+        /// Character index → the glyph to draw there, or nil to draw nothing.
+        /// The text view hands this to its layout manager, which is what lets
+        /// `\alpha` display as `α` while the file still says `\alpha`.
+        public var mathGlyphs: [Int: Character?] = [:]
     }
 
     @discardableResult
@@ -107,8 +114,141 @@ public enum MarkdownStyler {
         }
 
         applySyntaxHighlighting(tokens, to: storage, theme: theme, ns: ns)
+        let math = applyMath(tokens, to: storage, theme: theme,
+                             activeParagraph: activeParagraph, ns: ns,
+                             decorations: &decorations)
 
-        return Output(decorations: decorations, links: links)
+        return Output(decorations: decorations, links: links, mathGlyphs: math)
+    }
+
+    // MARK: - Math
+
+    /// Typesets `$…$` and `$$…$$`.
+    ///
+    /// The caret's own line is left as source — the same reveal every other
+    /// construct uses — so you always have a way to see and edit what you wrote.
+    private static func applyMath(_ tokens: [Token], to storage: NSTextStorage, theme: Theme,
+                                  activeParagraph: NSRange?, ns: NSString,
+                                  decorations: inout [BlockDecoration]) -> [Int: Character?] {
+        var glyphs: [Int: Character?] = [:]
+
+        for token in tokens where token.role == .content
+            && (token.kind == .mathInline || token.kind == .mathBlock) {
+            let range = token.range
+            guard range.length > 0, NSMaxRange(range) <= ns.length else { continue }
+
+            let isActive = activeParagraph.map { NSIntersectionRange($0, range).length > 0 } ?? false
+            let source = ns.substring(with: range)
+            let rendered = MathRenderer.render(source)
+
+            // Character offsets only line up when the source is all BMP; a stray
+            // emoji inside math would desynchronise them, so bail rather than
+            // mis-position every glyph after it.
+            guard rendered.count == source.count, source.utf16.count == source.count else { continue }
+
+            // If any symbol in this span cannot be drawn, the span keeps its
+            // source rather than hiding the letters around a glyph that never
+            // appears — which is how `\in` ended up rendering as a lone
+            // backslash.
+            var fonts = [Int: NSFont]()
+            var renderable = true
+            for (offset, item) in rendered.enumerated() {
+                let size = theme.bodySize * scale(for: item.style.scriptDepth)
+                let base = theme.mathFont(size: size, italic: item.style.italic)
+                fonts[offset] = base
+                guard let display = item.display, !display.isASCII else { continue }
+                let sourceCharacter = Array(source)[offset]
+                guard let usable = renderableFont(for: display, source: sourceCharacter, base: base) else {
+                    renderable = false
+                    break
+                }
+                fonts[offset] = usable
+            }
+
+            for (offset, item) in rendered.enumerated() {
+                let index = range.location + offset
+                let charRange = NSRange(location: index, length: 1)
+                let size = theme.bodySize * scale(for: item.style.scriptDepth)
+
+                storage.addAttribute(.font,
+                                     value: fonts[offset] ?? theme.mathFont(size: size, italic: item.style.italic),
+                                     range: charRange)
+                storage.addAttribute(.foregroundColor, value: Ink.ink, range: charRange)
+
+                switch item.style.raise {
+                case .superscript:
+                    storage.addAttribute(.baselineOffset, value: theme.bodySize * 0.36, range: charRange)
+                case .subscript:
+                    storage.addAttribute(.baselineOffset, value: -theme.bodySize * 0.14, range: charRange)
+                case .none:
+                    break
+                }
+
+                if !isActive, renderable {
+                    glyphs[index] = item.display
+                }
+            }
+
+            // One bar per radical, not one per character: a decoration per glyph
+            // draws a dashed line with a gap at every letter boundary.
+            var runStart: Int? = nil
+            for (offset, item) in rendered.enumerated() {
+                let overlined = item.style.overline
+                if overlined, runStart == nil { runStart = offset }
+                if !overlined, let start = runStart {
+                    decorations.append(.overline(NSRange(location: range.location + start,
+                                                         length: offset - start)))
+                    runStart = nil
+                }
+            }
+            if let start = runStart {
+                decorations.append(.overline(NSRange(location: range.location + start,
+                                                     length: rendered.count - start)))
+            }
+        }
+        return glyphs
+    }
+
+    /// The serif face does not carry every symbol, so each substitution needs a
+    /// font that demonstrably has the glyph. Asking the font is the only reliable
+    /// test — a cascade will happily claim coverage it cannot draw.
+    /// The font has to cover the replacement *and* the character it stands in
+    /// for. AppKit resolves font substitution before the glyph delegate runs, so
+    /// a font that draws ∈ but not the backslash it replaces gets swapped out
+    /// underneath us — and the substitution silently never happens.
+    static func renderableFont(for character: Character, source: Character, base: NSFont) -> NSFont? {
+        func canDraw(_ font: NSFont, _ c: Character) -> Bool {
+            let utf16 = Array(String(c).utf16)
+            guard utf16.count == 1 else { return false }
+            var unit = utf16[0]
+            var glyph: CGGlyph = 0
+            return CTFontGetGlyphsForCharacters(font, &unit, &glyph, 1) && glyph != 0
+        }
+        func usable(_ font: NSFont) -> Bool { canDraw(font, character) && canDraw(font, source) }
+
+        if usable(base) { return base }
+
+        let text = String(character) as NSString
+        let cascaded = CTFontCreateForString(base, text as CFString,
+                                             CFRange(location: 0, length: text.length)) as NSFont
+        if usable(cascaded) { return cascaded }
+
+        // The system face carries far more of the maths block than the serif does.
+        for candidate in [NSFont.systemFont(ofSize: base.pointSize),
+                          NSFont(name: "Apple Symbols", size: base.pointSize),
+                          NSFont(name: "STIXTwoMath-Regular", size: base.pointSize)] {
+            if let candidate, usable(candidate) { return candidate }
+        }
+        return nil
+    }
+
+    /// Scripts shrink, but never below legibility.
+    private static func scale(for depth: Int) -> CGFloat {
+        switch depth {
+        case 0: return 1.0
+        case 1: return 0.74
+        default: return 0.6
+        }
     }
 
     // MARK: - Code
@@ -293,6 +433,12 @@ public enum MarkdownStyler {
 
             case .blockquote:
                 storage.addAttribute(.foregroundColor, value: NSColor.clear, range: range)
+                return nil
+
+            case .mathInline, .mathBlock:
+                storage.addAttribute(.foregroundColor,
+                                     value: isActive ? Ink.syntaxActive : Ink.syntax,
+                                     range: range)
                 return nil
 
             case .tablePipe, .tableDelimiter:

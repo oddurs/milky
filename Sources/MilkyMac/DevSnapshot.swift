@@ -18,6 +18,30 @@ enum DevSnapshot {
         NSApp.appearance = args[index + 1] == "light" ? NSAppearance(named: .aqua) : NSAppearance(named: .darkAqua)
     }
 
+    /// `--caret <offset>` moves the insertion point before the snapshot, so the
+    /// reveal-on-the-active-line behaviour can be captured either way.
+    static func applyCaretOverride() {
+        let args = ProcessInfo.processInfo.arguments
+        guard let index = args.firstIndex(of: "--caret"), index + 1 < args.count,
+              let offset = Int(args[index + 1]) else { return }
+        for window in NSApp.windows {
+            guard let textView = firstTextView(in: window.contentView) else { continue }
+            let clamped = min(offset, (textView.string as NSString).length)
+            textView.setSelectedRange(NSRange(location: clamped, length: 0))
+            textView.window?.makeFirstResponder(textView)
+            return
+        }
+    }
+
+    private static func firstTextView(in view: NSView?) -> NSTextView? {
+        guard let view else { return nil }
+        if let textView = view as? NSTextView { return textView }
+        for subview in view.subviews {
+            if let found = firstTextView(in: subview) { return found }
+        }
+        return nil
+    }
+
     static func scheduleIfRequested() {
         applyAppearanceOverride()
         let args = ProcessInfo.processInfo.arguments
@@ -26,6 +50,7 @@ enum DevSnapshot {
         let delay = args.firstIndex(of: "--delay").flatMap { $0 + 1 < args.count ? Double(args[$0 + 1]) : nil } ?? 2.5
 
         DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+            applyCaretOverride()
             capture(to: path)
             if args.contains("--quit-after-snapshot") { NSApp.terminate(nil) }
         }

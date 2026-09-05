@@ -100,6 +100,26 @@ public struct Theme: Sendable {
 
     public var bodyFont: PlatformFont { font(size: bodySize) }
 
+    /// Math is set in New York regardless of the reading face: a serif is what
+    /// makes an equation read as an equation, and it is the system's own.
+    public func mathFont(size: CGFloat, italic: Bool = false) -> PlatformFont {
+        let base = PlatformFont.systemFont(ofSize: size, weight: .regular)
+        var descriptor = base.fontDescriptor
+        if let serif = descriptor.withDesign(.serif) { descriptor = serif }
+        if italic {
+            #if canImport(AppKit)
+            descriptor = descriptor.withSymbolicTraits(descriptor.symbolicTraits.union(.italic))
+            #else
+            descriptor = descriptor.withSymbolicTraits(descriptor.symbolicTraits.union(.traitItalic)) ?? descriptor
+            #endif
+        }
+        #if canImport(AppKit)
+        return PlatformFont(descriptor: descriptor, size: size) ?? base
+        #else
+        return PlatformFont(descriptor: descriptor, size: size)
+        #endif
+    }
+
     public func monoFont(size: CGFloat? = nil,
                          weight: PlatformFont.Weight = .regular,
                          italic: Bool = false) -> PlatformFont {
