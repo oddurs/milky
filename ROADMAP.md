@@ -28,7 +28,7 @@ A stranger can download Milky, open it, and it does not get blocked by Gatekeepe
 
 ## v0.2 — Daily driver
 
-`··········` 0% · 0 of 7 done · due 2026-12-15
+`··········` 0% · 0 of 16 done · due 2026-12-15
 
 The things you miss on day two: jumping between notes, backlinks, images, search that holds up on a real vault.
 
@@ -41,6 +41,15 @@ The things you miss on day two: jumping between notes, backlinks, images, search
 - [ ] `0013` Pin notes to the top of the list <sup>feature · p2 · parity</sup>
 - [ ] `0014` Restore deleted notes from inside the app <sup>feature · p2 · parity</sup>
 - [ ] `0015` Measure the editor on a very large note <sup>chore · p1 · performance</sup>
+- [ ] `0022` An external change is silently discarded while you are typing <sup>bug · p0 · reliability</sup>
+- [ ] `0023` Checkboxes are drawn but not clickable <sup>feature · p0 · parity</sup>
+- [ ] `0024` Sort and group the note list <sup>feature · p1 · parity</sup>
+- [ ] `0025` Folders can be created but never renamed, moved or deleted <sup>feature · p1 · parity</sup>
+- [ ] `0026` Drag and drop <sup>feature · p1 · parity</sup>
+- [ ] `0027` Link to a heading or a block <sup>feature · p1 · links</sup>
+- [ ] `0028` Read frontmatter as properties, and support aliases <sup>feature · p1 · links</sup>
+- [ ] `0029` Autocomplete when typing a wiki link <sup>feature · p1 · links</sup>
+- [ ] `0030` Search operators and match highlighting <sup>feature · p1 · search</sup>
 
 ## v0.3 — iPhone
 
@@ -55,4 +64,21 @@ The iOS app the shared core was kept AppKit-free for.
 - [ ] `0018` iOS app shell <sup>feature · p0 · ios</sup>
 - [ ] `0019` Open an iCloud Drive vault on iOS <sup>feature · p1 · ios</sup>
 - [ ] `0020` Move the test suite onto XCTest <sup>chore · p2 · testing</sup>
+
+## later — Someday
+
+`··········` 0% · 0 of 8 done
+
+Good ideas without a date yet.
+
+### backlog
+
+- [ ] `0031` Open a note in its own window <sup>feature · p2 · parity</sup>
+- [ ] `0032` Command palette <sup>feature · p2 · keyboard</sup>
+- [ ] `0033` Callouts <sup>feature · p2 · markdown</sup>
+- [ ] `0034` Print and export to PDF <sup>feature · p2 · parity</sup>
+- [ ] `0035` Settings window <sup>feature · p2 · parity</sup>
+- [ ] `0036` Outline of the open note <sup>feature · p3 · navigation</sup>
+- [ ] `0037` Embed one note inside another <sup>feature · p3 · links</sup>
+- [ ] `0038` Duplicate a note <sup>feature · p3 · parity</sup>
 
