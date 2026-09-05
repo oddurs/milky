@@ -1,0 +1,71 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  app:
+    name: Swift
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build
+        run: swift build
+
+      # Neither Swift Testing nor XCTest is usable without a full Xcode install,
+      # so the suite is a plain executable with its own assertion harness.
+      - name: Test
+        run: swift run milky-tests
+
+      - name: Bundle the app
+        run: ./Scripts/bundle.sh
+
+      - name: Check the bundle is well formed
+        run: |
+          plist="build/Milky.app/Contents/Info.plist"
+          test -x build/Milky.app/Contents/MacOS/Milky
+          test -f build/Milky.app/Contents/Resources/Milky.icns
+          /usr/libexec/PlistBuddy -c "Print :CFBundleIconFile" "$plist"
+          /usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "$plist"
+
+  site:
+    name: Landing page
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: Web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: Web/package-lock.json
+
+      - run: npm ci
+
+      # Also asserts the build stays self-contained, which is what lets the same
+      # output be published as a single-file artifact.
+      - run: npm run artifact
+
+  roadmap:
+    name: Roadmap
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install cairn
+        run: cargo install cairn-md --locked
+
+      - name: Validate items against the schema
+        run: cairn check
+
+      - name: Fail if ROADMAP.md has drifted from the items
+        run: cairn render --check

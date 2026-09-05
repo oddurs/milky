@@ -5,6 +5,7 @@ import MilkyStorage
 public struct RootView: View {
     @EnvironmentObject var model: AppModel
     @State private var columnVisibility: NavigationSplitViewVisibility = .all
+    @State private var showingAppearance = false
 
     public init() {}
 
@@ -39,6 +40,17 @@ public struct RootView: View {
         .navigationSplitViewStyle(.balanced)
         .toolbar {
             ToolbarItemGroup {
+                Button {
+                    showingAppearance.toggle()
+                } label: {
+                    Label("Appearance", systemImage: "textformat.size")
+                }
+                .help("Reading face and text size")
+                .popover(isPresented: $showingAppearance, arrowEdge: .bottom) {
+                    AppearancePopover()
+                        .environmentObject(model)
+                }
+
                 Button(action: model.newNote) {
                     Label("New Note", systemImage: "square.and.pencil")
                 }

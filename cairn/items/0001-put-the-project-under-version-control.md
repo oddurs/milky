@@ -2,7 +2,7 @@
 id: 1
 title: Put the project under version control
 type: chore
-status: doing
+status: done
 milestone: v0.1
 assignee: Oddur Sigurdsson
 labels:

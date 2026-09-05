@@ -2,8 +2,9 @@
 id: 4
 title: Draw an app icon
 type: feature
-status: planned
+status: done
 milestone: v0.1
+assignee: Oddur Sigurdsson
 labels:
 - release
 created: 2026-09-05

@@ -4,23 +4,33 @@
 
 ## v0.1 — Ship the Mac app
 
-`··········` 0% · 0 of 8 done · due 2026-10-15
+`#####·····` 44% · 4 of 9 done · due 2026-10-15
 
 A stranger can download Milky, open it, and it does not get blocked by Gatekeeper.
 
+### backlog
+
+- [ ] `0021` Surface files the vault cannot read <sup>bug · p1 · reliability</sup>
+
 ### planned
 
-- [ ] `0002` Run the test suite and cairn check in CI <sup>chore · p1 · ci</sup>
-- [ ] `0003` Sign and notarize the app for distribution <sup>chore · p0 · release</sup>
-- [ ] `0004` Draw an app icon <sup>feature · p0 · release</sup>
-- [ ] `0005` Build a release DMG from one command <sup>chore · p0 · release</sup>
-- [ ] `0006` Present the appearance controls <sup>feature · p1 · editor</sup>
 - [ ] `0007` Point the download buttons at a real release <sup>chore · p1 · release</sup>
 - [ ] `0008` Deploy the landing page <sup>chore · p1 · release</sup>
 
 ### in progress
 
-- [ ] `0001` Put the project under version control <sup>chore · p0 · release</sup>
+- [ ] `0002` Run the test suite and cairn check in CI <sup>chore · p1 · ci</sup>
+
+### blocked
+
+- [ ] `0003` Sign and notarize the app for distribution <sup>chore · p0 · release</sup>
+
+### done
+
+- [x] `0001` Put the project under version control <sup>chore · p0 · release</sup>
+- [x] `0004` Draw an app icon <sup>feature · p0 · release</sup>
+- [x] `0005` Build a release DMG from one command <sup>chore · p0 · release</sup>
+- [x] `0006` Present the appearance controls <sup>feature · p1 · editor</sup>
 
 ## v0.2 — Daily driver
 

@@ -2,8 +2,9 @@
 id: 6
 title: Present the appearance controls
 type: feature
-status: planned
+status: done
 milestone: v0.1
+assignee: Oddur Sigurdsson
 labels:
 - editor
 created: 2026-09-05

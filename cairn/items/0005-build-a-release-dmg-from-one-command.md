@@ -2,7 +2,7 @@
 id: 5
 title: Build a release DMG from one command
 type: chore
-status: planned
+status: done
 milestone: v0.1
 labels:
 - release
