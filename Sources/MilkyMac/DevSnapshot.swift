@@ -1,4 +1,5 @@
 import AppKit
+import MilkyUI
 
 /// Development helper: `--snapshot <path>` renders the main window to a PNG from
 /// inside the process, so design can be reviewed without screen-recording access.
@@ -42,6 +43,23 @@ enum DevSnapshot {
         return nil
     }
 
+    /// `MILKY_TOGGLE_CHECKBOX=1` clicks the first checkbox in the open note,
+    /// through the same hit test a real click takes.
+    ///
+    /// An environment variable rather than a flag: adding an unrecognised
+    /// `--argument` stopped the launch block from running at all, which cost an
+    /// hour to find. The trace switch in the test harness works the same way.
+    static func applyCheckboxClick() {
+        guard ProcessInfo.processInfo.environment["MILKY_TOGGLE_CHECKBOX"] != nil else { return }
+        for window in NSApp.windows {
+            guard let textView = firstTextView(in: window.contentView) as? MilkyTextView else { continue }
+            let hit = textView.clickFirstCheckbox()
+            FileHandle.standardError.write("checkbox clicked: \(hit)\n".data(using: .utf8)!)
+            return
+        }
+        FileHandle.standardError.write("checkbox clicked: no text view\n".data(using: .utf8)!)
+    }
+
     static func scheduleIfRequested() {
         applyAppearanceOverride()
         let args = ProcessInfo.processInfo.arguments
@@ -51,6 +69,7 @@ enum DevSnapshot {
 
         DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
             applyCaretOverride()
+            applyCheckboxClick()
             capture(to: path)
             if args.contains("--quit-after-snapshot") { NSApp.terminate(nil) }
         }

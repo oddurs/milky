@@ -429,6 +429,7 @@ public enum MarkdownStyler {
                 // The whole `- [x] ` marker is hidden and the box drawn at its start,
                 // so checklists line up with plain bullets instead of looking nested.
                 storage.addAttribute(.foregroundColor, value: NSColor.clear, range: range)
+                storage.addAttribute(.cursor, value: NSCursor.pointingHand, range: range)
                 return .marker(range, token.kind == .taskDone ? .checkboxDone : .checkboxOpen)
 
             case .blockquote:
