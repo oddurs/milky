@@ -18,14 +18,20 @@ public final class VaultWatcher {
         stop()
         let info = Unmanaged.passUnretained(self).toOpaque()
         var context = FSEventStreamContext(version: 0, info: info, retain: nil, release: nil, copyDescription: nil)
-        let callback: FSEventStreamCallback = { _, info, _, _, _, _ in
+        let callback: FSEventStreamCallback = { _, info, count, paths, _, _ in
             guard let info else { return }
-            Unmanaged<VaultWatcher>.fromOpaque(info).takeUnretainedValue().scheduleNotification()
+            let watcher = Unmanaged<VaultWatcher>.fromOpaque(info).takeUnretainedValue()
+            let changed = unsafeBitCast(paths, to: NSArray.self) as? [String] ?? []
+            guard VaultWatcher.isVaultChange(in: changed) else { return }
+            _ = count
+            watcher.scheduleNotification()
         }
         guard let stream = FSEventStreamCreate(
             kCFAllocatorDefault, callback, &context,
             [root.path] as CFArray, FSEventStreamEventId(kFSEventStreamEventIdSinceNow), 0.4,
-            FSEventStreamCreateFlags(kFSEventStreamCreateFlagFileEvents | kFSEventStreamCreateFlagNoDefer)
+            FSEventStreamCreateFlags(kFSEventStreamCreateFlagFileEvents
+                                     | kFSEventStreamCreateFlagNoDefer
+                                     | kFSEventStreamCreateFlagUseCFTypes)
         ) else { return }
         self.stream = stream
         FSEventStreamSetDispatchQueue(stream, queue)
@@ -38,6 +44,17 @@ public final class VaultWatcher {
         FSEventStreamInvalidate(stream)
         FSEventStreamRelease(stream)
         self.stream = nil
+    }
+
+    /// True when at least one path is something a vault cares about.
+    ///
+    /// The stream watches the vault root, so it also sees every `.git/index`
+    /// write. Without this, a sync fires the debounce, which rebuilds the whole
+    /// index — reading every file — while git is still working.
+    public static func isVaultChange(in paths: [String]) -> Bool {
+        paths.contains { path in
+            !path.split(separator: "/").contains { Vault.ignoredDirectories.contains(String($0)) }
+        }
     }
 
     /// A save or a sync lands as a burst of events; collapse them into one reload.
