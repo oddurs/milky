@@ -2,12 +2,13 @@
 id: 45
 title: Opening a vault reads every file on the main thread
 type: bug
-status: backlog
+status: doing
 milestone: v0.2
+assignee: Oddur Sigurdsson
 labels:
 - cloud
 created: 2026-09-05
-updated: 2026-09-05
+updated: 2026-09-06
 priority: p0
 effort: m
 area: storage

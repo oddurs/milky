@@ -73,6 +73,9 @@ public final class AppModel: ObservableObject {
     @Published public var theme = Theme() { didSet { persistTheme() } }
 
     private var watcher: VaultWatcher?
+    /// Bumped on every reload so a slow background pass from a closed vault
+    /// cannot publish over a newer one.
+    private var indexGeneration = 0
     private var saveWork: DispatchWorkItem?
     private var lastLoadedNoteID: Note.ID?
 
@@ -104,11 +107,12 @@ public final class AppModel: ObservableObject {
         self.vault = vault
         self.vaultKind = VaultLocations.kind(of: url)
         VaultBookmarks.remember(url)
-        reload()
-        if isNewVault && notes.isEmpty { seedWelcomeNote(in: vault) }
-        refreshVisible()
-        selectedNoteID = notes.first?.id
-        loadDraftForSelection()
+        reload { [weak self] in
+            guard let self else { return }
+            if isNewVault && self.notes.isEmpty { self.seedWelcomeNote(in: vault) }
+            if self.selectedNoteID == nil { self.selectedNoteID = self.visibleNotes.first?.id }
+            self.loadDraftForSelection()
+        }
         refreshGitStatus()
 
         watcher = VaultWatcher(root: url) { [weak self] in self?.handleExternalChange() }
@@ -129,37 +133,95 @@ public final class AppModel: ObservableObject {
         VaultBookmarks.forget()
     }
 
-    public func reload() {
+    /// Indexing runs off the main thread in two passes: metadata, so the list is
+    /// on screen immediately, then contents, so snippets and tags fill in.
+    ///
+    /// The old single pass read every file synchronously on the main actor. On a
+    /// large vault that froze the window; on a cloud folder it also *downloaded*
+    /// every evicted file, because reading a placeholder is what materialises it.
+    public func reload(then whenListed: (() -> Void)? = nil) {
         guard let vault else { return }
-        notes = vault.reload()
-        folders = vault.folders()
+        let root = vault.root
+        let generation = indexGeneration + 1
+        indexGeneration = generation
+
+        Task.detached(priority: .userInitiated) { [weak self] in
+            let listing = Vault.metadata(root: root)
+            let folders = Vault.folderPaths(root: root)
+            await MainActor.run {
+                guard let self, self.indexGeneration == generation else { return }
+                self.notes = listing
+                self.folders = folders
+                self.refreshVisible()
+                whenListed?()
+            }
+            await self?.loadContents(for: listing, generation: generation)
+        }
+    }
+
+    /// Fills in contents in batches, republishing as it goes so the list fills
+    /// rather than waiting for the whole vault.
+    private func loadContents(for listing: [Note], generation: Int) async {
+        var loaded: [Note.ID: String] = [:]
+        for (index, note) in listing.enumerated() {
+            if let text = Vault.loadContent(of: note) { loaded[note.id] = text }
+            let isLast = index == listing.count - 1
+            guard isLast || loaded.count % AppModel.indexBatch == 0 else { continue }
+
+            let batch = loaded
+            await MainActor.run { [weak self] in
+                guard let self, self.indexGeneration == generation else { return }
+                self.apply(contents: batch)
+            }
+        }
+    }
+
+    private static let indexBatch = 64
+
+    private func apply(contents: [Note.ID: String]) {
+        for index in notes.indices {
+            guard !notes[index].isLoaded, let text = contents[notes[index].id] else { continue }
+            notes[index].text = text
+            notes[index].isLoaded = true
+        }
         tags = Array(Set(notes.flatMap(\.tags))).sorted()
         refreshVisible()
     }
 
     /// Something outside the app touched the vault — a sync, a pull, another device.
     private func handleExternalChange() {
-        guard let vault else { return }
-        let previousSelection = selectedNoteID
-        reload()
-        refreshGitStatus()
-        if let previousSelection, notes.contains(where: { $0.id == previousSelection }) {
-            selectedNoteID = previousSelection
-            if let note = notes.first(where: { $0.id == previousSelection }), note.text != draft {
+        guard vault != nil else { return }
+
+        // Settle the open note against the file itself before reindexing. The
+        // list is rebuilt asynchronously now, so consulting `notes` here would
+        // compare the draft against the version from before the change.
+        if let note = selectedNote, conflict == nil {
+            if let onDisk = Vault.loadContent(of: note), onDisk != draft {
                 if isDirty {
-                    // Edited here and changed there. Do not pick a winner.
                     raiseConflict(for: note)
                 } else {
-                    draft = note.text
+                    draft = onDisk
+                    if let index = notes.firstIndex(where: { $0.id == note.id }) {
+                        notes[index].text = onDisk
+                        notes[index].isLoaded = true
+                    }
                     loadedModified = Vault.modificationDate(of: note.url)
-                    lastLoadedNoteID = nil
                 }
             }
-        } else {
-            selectedNoteID = visibleNotes.first?.id
-            loadDraftForSelection()
         }
-        _ = vault
+
+        let previousSelection = selectedNoteID
+        reload { [weak self] in
+            guard let self else { return }
+            if let previousSelection, self.notes.contains(where: { $0.id == previousSelection }) {
+                self.selectedNoteID = previousSelection
+            } else {
+                self.selectedNoteID = self.visibleNotes.first?.id
+                self.lastLoadedNoteID = nil
+                self.loadDraftForSelection()
+            }
+        }
+        refreshGitStatus()
     }
 
     private func seedWelcomeNote(in vault: Vault) {
@@ -260,14 +322,29 @@ public final class AppModel: ObservableObject {
         }
         guard note.id != lastLoadedNoteID else { return }
         flushPendingSave()
-        draft = note.text
+        let loaded = ensureLoaded(note)
+        draft = loaded.text
         isDirty = false
-        adopt(note)
+        adopt(loaded)
     }
 
     /// Takes a note as the open document. The id and the on-disk timestamp are
     /// set together on purpose: separating them is how the write guard ends up
     /// comparing against the *previous* note's file and inventing a conflict.
+    /// Reads a note's contents now if the background pass has not reached it.
+    /// One file is cheap; the point of the lazy index is to avoid reading *all*
+    /// of them, not to leave the open note blank.
+    @discardableResult
+    private func ensureLoaded(_ note: Note) -> Note {
+        guard !note.isLoaded else { return note }
+        guard let text = Vault.loadContent(of: note) else { return note }
+        var filled = note
+        filled.text = text
+        filled.isLoaded = true
+        if let index = notes.firstIndex(where: { $0.id == note.id }) { notes[index] = filled }
+        return filled
+    }
+
     private func adopt(_ note: Note) {
         lastLoadedNoteID = note.id
         loadedModified = Vault.modificationDate(of: note.url)

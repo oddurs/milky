@@ -25,34 +25,70 @@ public final class Vault {
         return notes
     }
 
-    static func scan(root: URL) -> [Note] {
+    /// Lists the vault without opening a single file.
+    ///
+    /// Reading contents is what makes indexing expensive, and on a cloud folder
+    /// it is worse than expensive: a Dropbox online-only or iCloud evicted file
+    /// is *downloaded* by the act of reading it. Enumerating metadata touches
+    /// none of that, so a vault of any size and any residency lists instantly.
+    public static func metadata(root: URL) -> [Note] {
+        entries(root: root).map { entry in
+            Note(url: entry.url, relativePath: entry.relativePath, folder: entry.folder,
+                 text: "", modified: entry.modified, created: entry.created, isLoaded: false)
+        }
+        .sorted { $0.modified > $1.modified }
+    }
+
+    /// Reads one note's contents. Returns nil when the file cannot be read,
+    /// which the caller must not confuse with an empty note — see 0021.
+    public static func loadContent(of note: Note) -> String? {
+        try? String(contentsOf: note.url, encoding: .utf8)
+    }
+
+    struct Entry {
+        var url: URL
+        var relativePath: String
+        var folder: String
+        var modified: Date
+        var created: Date
+    }
+
+    /// The walk both scans share, so the ignore rules cannot drift apart.
+    static func entries(root: URL) -> [Entry] {
         let fm = FileManager.default
         let keys: [URLResourceKey] = [.isDirectoryKey, .contentModificationDateKey, .creationDateKey, .nameKey]
         guard let walker = fm.enumerator(at: root, includingPropertiesForKeys: keys,
                                          options: [.skipsHiddenFiles, .skipsPackageDescendants]) else { return [] }
-        var result: [Note] = []
+        var result: [Entry] = []
         for case let url as URL in walker {
-            let name = url.lastPathComponent
-            if Vault.ignoredDirectories.contains(name) {
+            if Vault.ignoredDirectories.contains(url.lastPathComponent) {
                 walker.skipDescendants()
                 continue
             }
             let values = try? url.resourceValues(forKeys: Set(keys))
             if values?.isDirectory == true { continue }
             guard markdownExtensions.contains(url.pathExtension.lowercased()) else { continue }
-            guard let text = try? String(contentsOf: url, encoding: .utf8) else { continue }
-            result.append(Note(url: url,
-                               relativePath: Vault.relativePath(of: url, from: root),
-                               folder: Vault.folderPath(of: url, from: root),
-                               text: text,
-                               modified: values?.contentModificationDate ?? .distantPast,
-                               created: values?.creationDate ?? .distantPast))
+            result.append(Entry(url: url,
+                                relativePath: Vault.relativePath(of: url, from: root),
+                                folder: Vault.folderPath(of: url, from: root),
+                                modified: values?.contentModificationDate ?? .distantPast,
+                                created: values?.creationDate ?? .distantPast))
         }
         return result
     }
 
+    static func scan(root: URL) -> [Note] {
+        entries(root: root).compactMap { entry in
+            guard let text = try? String(contentsOf: entry.url, encoding: .utf8) else { return nil }
+            return Note(url: entry.url, relativePath: entry.relativePath, folder: entry.folder,
+                        text: text, modified: entry.modified, created: entry.created)
+        }
+    }
+
+    public func folders() -> [String] { Vault.folderPaths(root: root) }
+
     /// Every subdirectory that could hold notes, as vault-relative paths.
-    public func folders() -> [String] {
+    public static func folderPaths(root: URL) -> [String] {
         let fm = FileManager.default
         guard let walker = fm.enumerator(at: root, includingPropertiesForKeys: [.isDirectoryKey],
                                          options: [.skipsHiddenFiles, .skipsPackageDescendants]) else { return [] }

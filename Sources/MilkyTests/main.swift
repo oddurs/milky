@@ -178,6 +178,43 @@ t.suite("vault") {
     t.expect(!vault.notes.contains { $0.relativePath.contains(".git") }, "the .git directory is skipped")
 }
 
+t.suite("lazy indexing") {
+    let root = URL(fileURLWithPath: NSTemporaryDirectory())
+        .appending(path: "milky-lazy-\(ProcessInfo.processInfo.processIdentifier)")
+    try? FileManager.default.removeItem(at: root)
+    try FileManager.default.createDirectory(at: root.appending(path: "Deep"),
+                                            withIntermediateDirectories: true)
+    defer { try? FileManager.default.removeItem(at: root) }
+
+    let vault = Vault(root: root)
+    _ = try vault.createNote(title: "One", body: "first #alpha")
+    _ = try vault.createNote(title: "Two", in: "Deep", body: "second")
+
+    let listing = Vault.metadata(root: root)
+    t.equal(listing.count, 2, "metadata finds every note")
+    t.expect(listing.allSatisfy { !$0.isLoaded }, "and reads none of them")
+    t.expect(listing.allSatisfy { $0.text.isEmpty }, "so contents are empty until asked for")
+    t.equal(listing.map(\.title).sorted(), ["One", "Two"], "titles come from the filename, not the body")
+    t.expect(listing.contains { $0.folder == "Deep" }, "nested notes are found")
+
+    // Sorted newest first, like the eager scan.
+    t.expect(listing.first!.modified >= listing.last!.modified, "newest first")
+
+    let one = listing.first { $0.title == "One" }!
+    t.equal(Vault.loadContent(of: one), "first #alpha", "content loads on demand")
+
+    // The two walks must agree, or the list changes shape as it fills in.
+    let eager = vault.reload()
+    t.equal(eager.map(\.id).sorted(), listing.map(\.id).sorted(),
+            "the lazy and eager walks find the same notes")
+
+    // An unreadable file yields nil rather than an empty note — 0021 depends on
+    // being able to tell those apart.
+    let missing = Note(url: root.appending(path: "Gone.md"), relativePath: "Gone.md",
+                       folder: "", text: "", modified: Date(), created: Date(), isLoaded: false)
+    t.equal(Vault.loadContent(of: missing), nil, "an unreadable file is nil, not empty")
+}
+
 t.suite("git vault setup") {
     let root = URL(fileURLWithPath: NSTemporaryDirectory())
         .appending(path: "milky-gitseed-\(ProcessInfo.processInfo.processIdentifier)")
