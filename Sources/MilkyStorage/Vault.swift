@@ -9,7 +9,9 @@ public final class Vault {
     public private(set) var notes: [Note] = []
 
     public static let markdownExtensions: Set<String> = ["md", "markdown", "mdown", "txt"]
-    private static let ignoredDirectories: Set<String> = [".git", ".obsidian", ".trash", "node_modules", ".DS_Store"]
+    /// Directories that are never part of a vault. Shared with `VaultWatcher`,
+    /// which must skip the same ones — a `.git` write is not a note changing.
+    public static let ignoredDirectories: Set<String> = [".git", ".obsidian", ".trash", "node_modules", ".DS_Store"]
 
     public init(root: URL) {
         self.root = root

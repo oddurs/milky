@@ -2,12 +2,13 @@
 id: 48
 title: The watcher rebuilds the index on every git write
 type: bug
-status: backlog
+status: doing
 milestone: v0.2
+assignee: Oddur Sigurdsson
 labels:
 - sync
 created: 2026-09-05
-updated: 2026-09-05
+updated: 2026-09-06
 priority: p1
 effort: s
 area: storage

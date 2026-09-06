@@ -178,6 +178,25 @@ t.suite("vault") {
     t.expect(!vault.notes.contains { $0.relativePath.contains(".git") }, "the .git directory is skipped")
 }
 
+t.suite("watcher filtering") {
+    let vault = "/Users/x/Notes"
+    t.expect(VaultWatcher.isVaultChange(in: ["\(vault)/Note.md"]), "a note change reloads")
+    t.expect(!VaultWatcher.isVaultChange(in: ["\(vault)/.git/index"]), "a git index write does not")
+    t.expect(!VaultWatcher.isVaultChange(in: ["\(vault)/.git/refs/heads/main"]), "nor a ref update")
+    t.expect(!VaultWatcher.isVaultChange(in: [
+        "\(vault)/.git/index", "\(vault)/.git/ORIG_HEAD",
+    ]), "a burst of git writes does not")
+    t.expect(VaultWatcher.isVaultChange(in: [
+        "\(vault)/.git/index", "\(vault)/Note.md",
+    ]), "but a real change mixed in with them does")
+    t.expect(!VaultWatcher.isVaultChange(in: ["\(vault)/.obsidian/workspace.json"]),
+             "other tools' directories are skipped too")
+    t.expect(!VaultWatcher.isVaultChange(in: []), "an empty burst is not a change")
+    // A note whose name merely contains an ignored word is still a note.
+    t.expect(VaultWatcher.isVaultChange(in: ["\(vault)/node_modules notes.md"]),
+             "matching is per path component, not substring")
+}
+
 t.suite("case-only rename") {
     let root = URL(fileURLWithPath: NSTemporaryDirectory())
         .appending(path: "milky-case-\(ProcessInfo.processInfo.processIdentifier)")

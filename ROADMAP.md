@@ -36,9 +36,12 @@ You can point Milky at a folder that git, Dropbox or iCloud is also writing to, 
 - [ ] `0045` Opening a vault reads every file on the main thread <sup>bug · p0 · cloud</sup>
 - [ ] `0046` iCloud files that are not downloaded are invisible <sup>bug · p0 · cloud</sup>
 - [ ] `0047` Coordinate reads and writes with the system <sup>feature · p1 · cloud</sup>
-- [ ] `0048` The watcher rebuilds the index on every git write <sup>bug · p1 · sync</sup>
 - [ ] `0050` A merge conflict leaves you in the terminal <sup>feature · p1 · sync</sup>
 - [ ] `0051` Set a git vault up properly on init <sup>chore · p1 · sync</sup>
+
+### in progress
+
+- [ ] `0048` The watcher rebuilds the index on every git write <sup>bug · p1 · sync</sup>
 
 ### done
 
