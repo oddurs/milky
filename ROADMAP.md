@@ -31,11 +31,8 @@ You can point Milky at a folder that git, Dropbox or iCloud is also writing to, 
 ### backlog
 
 - [ ] `0015` Measure the editor on a very large note <sup>chore · p1 · performance</sup>
-- [ ] `0022` An external change is silently discarded while you are typing <sup>bug · p0 · reliability</sup>
-
-### in progress
-
 - [ ] `0021` Surface files the vault cannot read <sup>bug · p1 · reliability</sup>
+- [ ] `0022` An external change is silently discarded while you are typing <sup>bug · p0 · reliability</sup>
 
 ## v0.3 — It behaves like Notes
 
