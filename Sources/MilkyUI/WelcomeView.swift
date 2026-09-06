@@ -24,7 +24,7 @@ struct WelcomeView: View {
 
             VStack(spacing: 8) {
                 if let iCloud = VaultLocations.iCloudDrive {
-                    option(.iCloud, subtitle: "Syncs to your iPhone automatically") {
+                    option(.iCloud, subtitle: "A folder macOS keeps in sync across your Macs") {
                         onChoose(iCloud.appending(path: "Milky"))
                     }
                 }
