@@ -9,17 +9,23 @@ public struct Note: Identifiable, Hashable {
     public var text: String
     public var modified: Date
     public var created: Date
+    /// False until the file's contents have been read. A vault is listed from
+    /// filesystem metadata first, so a note exists — with a title and a date —
+    /// well before anyone has paid to open it.
+    public var isLoaded: Bool
 
     public var id: String { relativePath }
     public var title: String { url.deletingPathExtension().lastPathComponent }
 
-    public init(url: URL, relativePath: String, folder: String, text: String, modified: Date, created: Date) {
+    public init(url: URL, relativePath: String, folder: String, text: String,
+                modified: Date, created: Date, isLoaded: Bool = true) {
         self.url = url
         self.relativePath = relativePath
         self.folder = folder
         self.text = text
         self.modified = modified
         self.created = created
+        self.isLoaded = isLoaded
     }
 
     /// The first line of real prose, stripped of markdown, for the note list.
