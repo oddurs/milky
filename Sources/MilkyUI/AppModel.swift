@@ -542,6 +542,45 @@ public final class AppModel: ObservableObject {
         }
     }
 
+    public func renameFolder(_ path: String, to name: String) {
+        guard let vault else { return }
+        do {
+            let renamed = try vault.renameFolder(path, to: name)
+            if case .folder(let selected) = sidebarSelection, selected == path {
+                sidebarSelection = .folder(renamed)
+            }
+            reload()
+        } catch { errorMessage = AppModel.describe(error) }
+    }
+
+    public func moveFolder(_ path: String, into parent: String) {
+        guard let vault else { return }
+        do {
+            let moved = try vault.moveFolder(path, into: parent)
+            if case .folder(let selected) = sidebarSelection, selected == path {
+                sidebarSelection = .folder(moved)
+            }
+            reload()
+        } catch { errorMessage = AppModel.describe(error) }
+    }
+
+    public func deleteFolder(_ path: String) {
+        guard let vault else { return }
+        do {
+            try vault.deleteFolder(path)
+            if case .folder(let selected) = sidebarSelection,
+               selected == path || selected.hasPrefix(path + "/") {
+                sidebarSelection = .all
+            }
+            reload()
+        } catch { errorMessage = AppModel.describe(error) }
+    }
+
+    /// Notes that would go with a folder, so the confirmation can say how many.
+    public func noteCount(inFolder path: String) -> Int {
+        notes.filter { $0.folder == path || $0.folder.hasPrefix(path + "/") }.count
+    }
+
     public func createFolder(named name: String) {
         guard let vault else { return }
         do {

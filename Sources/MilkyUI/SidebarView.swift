@@ -36,6 +36,16 @@ struct SidebarView: View {
     @EnvironmentObject var model: AppModel
     @State private var isCreatingFolder = false
     @State private var newFolderName = ""
+    @State private var renamingFolder: String?
+    @State private var renameText = ""
+    @State private var deletingFolder: String?
+
+    private func beginRename(_ path: String, _ name: String) {
+        renameText = name
+        renamingFolder = path
+    }
+
+    private func confirmDelete(_ path: String) { deletingFolder = path }
 
     var body: some View {
         List(selection: $model.sidebarSelection) {
@@ -47,7 +57,7 @@ struct SidebarView: View {
             if !tree.isEmpty {
                 Section("Folders") {
                     ForEach(tree) { node in
-                        FolderRow(node: node)
+                        FolderRow(node: node, onRename: beginRename, onDelete: confirmDelete)
                     }
                 }
             }
@@ -63,6 +73,36 @@ struct SidebarView: View {
         .listStyle(.sidebar)
         .safeAreaInset(edge: .bottom) { footer }
         .sheet(isPresented: $isCreatingFolder) { newFolderSheet }
+        .alert("Rename Folder", isPresented: Binding(
+            get: { renamingFolder != nil },
+            set: { if !$0 { renamingFolder = nil } }
+        )) {
+            TextField("Name", text: $renameText)
+            Button("Rename") {
+                if let path = renamingFolder { model.renameFolder(path, to: renameText) }
+                renamingFolder = nil
+            }
+            Button("Cancel", role: .cancel) { renamingFolder = nil }
+        } message: {
+            Text("The notes inside move with it.")
+        }
+        .alert("Delete Folder", isPresented: Binding(
+            get: { deletingFolder != nil },
+            set: { if !$0 { deletingFolder = nil } }
+        )) {
+            Button("Move to Trash", role: .destructive) {
+                if let path = deletingFolder { model.deleteFolder(path) }
+                deletingFolder = nil
+            }
+            Button("Cancel", role: .cancel) { deletingFolder = nil }
+        } message: {
+            // Say how many notes go with it — the whole point of the confirmation.
+            let count = deletingFolder.map { model.noteCount(inFolder: $0) } ?? 0
+            Text(count == 0
+                 ? "This folder is empty. It goes to the Trash, where you can put it back."
+                 : "\(count) note\(count == 1 ? "" : "s") go to the Trash with it, "
+                   + "where you can put them back.")
+        }
     }
 
     @ViewBuilder
@@ -73,6 +113,8 @@ struct SidebarView: View {
 
     private struct FolderRow: View {
         let node: FolderNode
+        let onRename: (String, String) -> Void
+        let onDelete: (String) -> Void
         @EnvironmentObject var model: AppModel
 
         var body: some View {
@@ -80,7 +122,9 @@ struct SidebarView: View {
                 label
             } else {
                 DisclosureGroup {
-                    ForEach(node.children) { child in FolderRow(node: child) }
+                    ForEach(node.children) { child in
+                        FolderRow(node: child, onRename: onRename, onDelete: onDelete)
+                    }
                 } label: {
                     label
                 }
@@ -91,6 +135,24 @@ struct SidebarView: View {
             SidebarRow(symbol: "folder", title: node.name,
                        count: model.noteCount(for: .folder(node.path)))
                 .tag(SidebarSelection.folder(node.path))
+                .contextMenu {
+                    Button("Rename…") { onRename(node.path, node.name) }
+                    Menu("Move to") {
+                        Button("Top Level") { model.moveFolder(node.path, into: "") }
+                        ForEach(model.folders.filter {
+                            $0 != node.path && !$0.hasPrefix(node.path + "/")
+                        }, id: \.self) { destination in
+                            Button(destination) { model.moveFolder(node.path, into: destination) }
+                        }
+                    }
+                    Button("Reveal in Finder") {
+                        if let root = model.vaultRootURL {
+                            NSWorkspace.shared.activateFileViewerSelecting([root.appending(path: node.path)])
+                        }
+                    }
+                    Divider()
+                    Button("Delete", role: .destructive) { onDelete(node.path) }
+                }
         }
     }
 
