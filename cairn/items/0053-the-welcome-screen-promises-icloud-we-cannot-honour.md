@@ -2,13 +2,14 @@
 id: 53
 title: The welcome screen promises iCloud we cannot honour
 type: bug
-status: backlog
+status: doing
 milestone: v0.1
+assignee: Oddur Sigurdsson
 labels:
 - cloud
 - release
 created: 2026-09-05
-updated: 2026-09-05
+updated: 2026-09-06
 priority: p0
 effort: s
 area: app

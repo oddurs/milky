@@ -8,7 +8,7 @@
 
 A stranger can download Milky, open it, and it does not get blocked by Gatekeeper.
 
-### backlog
+### in progress
 
 - [ ] `0053` The welcome screen promises iCloud we cannot honour <sup>bug · p0 · cloud · release</sup>
 
