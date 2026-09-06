@@ -2,7 +2,7 @@
 id: 45
 title: Opening a vault reads every file on the main thread
 type: bug
-status: doing
+status: done
 milestone: v0.2
 assignee: Oddur Sigurdsson
 labels:
