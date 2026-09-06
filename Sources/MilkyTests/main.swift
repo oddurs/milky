@@ -186,12 +186,12 @@ t.suite("git vault setup") {
     defer { try? FileManager.default.removeItem(at: root) }
 
     let sync = GitSync(root: root)
-    guard sync.isAvailable else {
-        t.expect(true, "git unavailable; seeding checks skipped")
-        return
-    }
 
-    try sync.initialize()
+    // Seeding needs no git at all, so assert it on its own before anything that
+    // depends on the machine's configuration.
+    let written = try sync.seedFiles()
+    t.equal(written.sorted(), [".gitattributes", ".gitignore"], "both files are seeded")
+
     let ignore = try String(contentsOf: root.appending(path: ".gitignore"), encoding: .utf8)
     let attrs = try String(contentsOf: root.appending(path: ".gitattributes"), encoding: .utf8)
     t.expect(ignore.contains(".DS_Store"), "the ignore file keeps .DS_Store out of every commit")
@@ -199,13 +199,43 @@ t.suite("git vault setup") {
 
     // A vault that already has an opinion keeps it.
     try "mine\n".write(to: root.appending(path: ".gitignore"), atomically: true, encoding: .utf8)
-    let written = try sync.seedFiles()
-    t.equal(written, [], "nothing is rewritten on a second pass")
+    t.equal(try sync.seedFiles(), [], "nothing is rewritten on a second pass")
     t.equal(try String(contentsOf: root.appending(path: ".gitignore"), encoding: .utf8), "mine\n",
             "an existing ignore file is left alone")
 
-    // The identity check is a real gate, not decoration.
-    t.expect(sync.hasIdentity, "this machine has a git identity, so init could commit")
+    guard sync.isAvailable else {
+        t.expect(true, "git unavailable; identity checks skipped")
+        return
+    }
+
+    // The identity gate must be asserted against a repository we configure, not
+    // against whatever the machine happens to have. A CI runner has no global
+    // identity and this suite used to fail there and pass here — the test was
+    // measuring the environment rather than the code.
+    func git(_ args: [String]) {
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/git")
+        process.arguments = args
+        process.currentDirectoryURL = root
+        process.standardOutput = Pipe()
+        process.standardError = Pipe()
+        try? process.run()
+        process.waitUntilExit()
+    }
+
+    git(["init"])
+    git(["config", "user.name", "Milky Tests"])
+    git(["config", "user.email", "tests@milky.local"])
+    t.expect(sync.hasIdentity, "a repository with a local identity can commit")
+
+    // And with the identity removed, the gate closes.
+    git(["config", "--unset", "user.name"])
+    git(["config", "--unset", "user.email"])
+    let global = (try? String(contentsOf: URL(fileURLWithPath: NSHomeDirectory())
+        .appending(path: ".gitconfig"), encoding: .utf8)) ?? ""
+    if !global.contains("email") {
+        t.expect(!sync.hasIdentity, "without one, it does not")
+    }
 }
 
 t.suite("watcher filtering") {
@@ -489,6 +519,12 @@ t.suite("git sync") {
 
     git(["init", "--bare", "-b", "main", remote.path], in: sandbox)
     git(["init", "-b", "main"], in: working)
+    // GitSync runs its own git process, which inherits the ambient config rather
+    // than this helper's environment variables — so the identity has to be on the
+    // repository itself, or the suite passes on a developer's Mac and fails on a
+    // runner that has no global one.
+    git(["config", "user.name", "Milky Tests"], in: working)
+    git(["config", "user.email", "tests@milky.local"], in: working)
     git(["remote", "add", "origin", remote.path], in: working)
 
     let vault = Vault(root: working)
