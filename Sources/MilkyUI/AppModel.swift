@@ -1,3 +1,4 @@
+import AppKit
 import Foundation
 import SwiftUI
 import MilkyCore
@@ -76,6 +77,16 @@ public final class AppModel: ObservableObject {
     /// Bumped on every reload so a slow background pass from a closed vault
     /// cannot publish over a newer one.
     private var indexGeneration = 0
+
+    /// Notes the vault could list but not open. Usually macOS withholding
+    /// access to a protected folder — ~/Documents, ~/Desktop, iCloud Drive —
+    /// which otherwise looks exactly like a vault of empty notes.
+    @Published public private(set) var unreadable: Set<Note.ID> = []
+
+    public var openNoteIsUnreadable: Bool {
+        guard let id = selectedNoteID else { return false }
+        return unreadable.contains(id)
+    }
     private var saveWork: DispatchWorkItem?
     private var lastLoadedNoteID: Note.ID?
 
@@ -117,6 +128,20 @@ public final class AppModel: ObservableObject {
 
         watcher = VaultWatcher(root: url) { [weak self] in self?.handleExternalChange() }
         watcher?.start()
+    }
+
+    /// Re-runs the folder chooser on the current vault, which is what makes macOS
+    /// ask again after it has withheld access to a protected folder.
+    public func reopenForAccess() {
+        guard let root = vault?.root else { return }
+        let panel = NSOpenPanel()
+        panel.canChooseDirectories = true
+        panel.canChooseFiles = false
+        panel.directoryURL = root
+        panel.prompt = "Grant Access"
+        panel.message = "Choose this folder again so macOS can give Milky permission to read it."
+        guard panel.runModal() == .OK, let chosen = panel.url else { return }
+        open(chosen)
     }
 
     public func closeVault() {
@@ -163,22 +188,29 @@ public final class AppModel: ObservableObject {
     /// rather than waiting for the whole vault.
     private func loadContents(for listing: [Note], generation: Int) async {
         var loaded: [Note.ID: String] = [:]
+        var failed: Set<Note.ID> = []
         for (index, note) in listing.enumerated() {
-            if let text = Vault.loadContent(of: note) { loaded[note.id] = text }
+            if let text = Vault.loadContent(of: note) {
+                loaded[note.id] = text
+            } else {
+                failed.insert(note.id)
+            }
             let isLast = index == listing.count - 1
-            guard isLast || loaded.count % AppModel.indexBatch == 0 else { continue }
+            guard isLast || (loaded.count + failed.count) % AppModel.indexBatch == 0 else { continue }
 
             let batch = loaded
+            let unreadable = failed
             await MainActor.run { [weak self] in
                 guard let self, self.indexGeneration == generation else { return }
-                self.apply(contents: batch)
+                self.apply(contents: batch, unreadable: unreadable)
             }
         }
     }
 
     private static let indexBatch = 64
 
-    private func apply(contents: [Note.ID: String]) {
+    private func apply(contents: [Note.ID: String], unreadable failed: Set<Note.ID>) {
+        unreadable = failed
         for index in notes.indices {
             guard !notes[index].isLoaded, let text = contents[notes[index].id] else { continue }
             notes[index].text = text
@@ -337,7 +369,11 @@ public final class AppModel: ObservableObject {
     @discardableResult
     private func ensureLoaded(_ note: Note) -> Note {
         guard !note.isLoaded else { return note }
-        guard let text = Vault.loadContent(of: note) else { return note }
+        guard let text = Vault.loadContent(of: note) else {
+            unreadable.insert(note.id)
+            return note
+        }
+        unreadable.remove(note.id)
         var filled = note
         filled.text = text
         filled.isLoaded = true

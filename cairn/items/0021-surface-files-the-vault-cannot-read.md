@@ -2,14 +2,15 @@
 id: 21
 title: Surface files the vault cannot read
 type: bug
-status: backlog
+status: doing
 milestone: v0.2
+assignee: Oddur Sigurdsson
 labels:
 - reliability
 depends_on:
 - 45
 created: 2026-09-05
-updated: 2026-09-05
+updated: 2026-09-06
 priority: p1
 effort: s
 area: storage

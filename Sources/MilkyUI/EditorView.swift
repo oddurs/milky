@@ -10,7 +10,9 @@ struct EditorView: View {
 
     var body: some View {
         Group {
-            if let note = model.selectedNote {
+            if model.openNoteIsUnreadable, let note = model.selectedNote {
+                unreadable(note)
+            } else if let note = model.selectedNote {
                 content(for: note)
             } else {
                 placeholder
@@ -69,6 +71,20 @@ struct EditorView: View {
         .padding(.vertical, Space.sm)
         .background(.ultraThinMaterial)
         .overlay(alignment: .top) { Divider().opacity(0.4) }
+    }
+
+    /// Listed but not openable. Saying "no additional text" here would be a lie
+    /// that looks exactly like an empty note.
+    private func unreadable(_ note: Note) -> some View {
+        VStack(spacing: Space.lg) {
+            EmptyState(symbol: "lock.doc",
+                       title: "Can’t read this note",
+                       detail: "macOS hasn’t given Milky permission to open "
+                             + "\(note.relativePath). Choosing the folder again asks it to.")
+            Button("Grant Access…") { model.reopenForAccess() }
+                .buttonStyle(.borderedProminent)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     private var placeholder: some View {

@@ -12,7 +12,8 @@ struct NoteListView: View {
         VStack(spacing: 0) {
             List(selection: $model.selectedNoteID) {
                 ForEach(notes) { note in
-                    NoteRow(note: note, isSelected: note.id == model.selectedNoteID)
+                    NoteRow(note: note, isSelected: note.id == model.selectedNoteID,
+                            isUnreadable: model.unreadable.contains(note.id))
                         .tag(note.id)
                         .listRowInsets(EdgeInsets(top: 0, leading: 8, bottom: 0, trailing: 8))
                         .listRowSeparator(.hidden)
@@ -68,16 +69,26 @@ struct NoteListView: View {
         Color(nsColor: .textBackgroundColor).opacity(0.55)
     }
 
+    @ViewBuilder
     private var emptyState: some View {
-        model.searchText.isEmpty
-            ? EmptyState(title: "No Notes", detail: "Press ⌘N to write one.")
-            : EmptyState(title: "No Results", detail: "Nothing here matches “\(model.searchText)”.")
+        if !model.searchText.isEmpty {
+            EmptyState(title: "No Results", detail: "Nothing here matches “\(model.searchText)”.")
+        } else if !model.unreadable.isEmpty {
+            // Not the same thing as an empty vault, and it used to look identical.
+            EmptyState(symbol: "lock.doc",
+                       title: "Can’t read this folder",
+                       detail: "\(model.unreadable.count) notes are here but macOS won’t let "
+                             + "Milky open them.")
+        } else {
+            EmptyState(title: "No Notes", detail: "Press ⌘N to write one.")
+        }
     }
 }
 
 private struct NoteRow: View {
     let note: Note
     let isSelected: Bool
+    let isUnreadable: Bool
     @Environment(\.controlActiveState) private var activeState
 
     /// Selected *and* the window is the active one.
@@ -94,7 +105,7 @@ private struct NoteRow: View {
             HStack(spacing: Space.xs) {
                 Text(NoteRow.dateLabel(note.modified))
                     .textRole(.rowMeta, color: filled ? Palette.onAccent.opacity(0.82) : Palette.inkSoft)
-                Text(note.snippet.isEmpty ? "No additional text" : note.snippet)
+                Text(snippet)
                     .lineLimit(1)
                     .textRole(.rowMeta, color: filled ? Palette.onAccent.opacity(0.62) : Palette.inkFaint)
             }
@@ -109,6 +120,14 @@ private struct NoteRow: View {
             RoundedRectangle(cornerRadius: Radius.md, style: .continuous)
                 .fill(rowFill)
         )
+    }
+
+    /// A note that cannot be opened is not a note with nothing in it, and it
+    /// must not read as one.
+    private var snippet: String {
+        if isUnreadable { return "Can’t be read" }
+        if !note.isLoaded { return "" }
+        return note.snippet.isEmpty ? "No additional text" : note.snippet
     }
 
     private var rowFill: AnyShapeStyle {
