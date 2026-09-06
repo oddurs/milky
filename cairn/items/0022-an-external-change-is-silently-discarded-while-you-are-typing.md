@@ -2,7 +2,7 @@
 id: 22
 title: An external change is silently discarded while you are typing
 type: bug
-status: doing
+status: done
 milestone: v0.2
 assignee: Oddur Sigurdsson
 labels:
