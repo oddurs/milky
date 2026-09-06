@@ -30,3 +30,13 @@ reliably fire it. `NSMetadataQuery` is the tool for a ubiquitous container.
 - [ ] The open vault registers a file presenter
 - [ ] iCloud vaults are watched with `NSMetadataQuery`, local ones with FSEvents
 - [ ] `NSFileVersion.unresolvedConflictVersionsOfItem` is checked and surfaced
+
+## Needs a real iCloud vault, and is worth doing carefully
+
+The same constraint as `0046`, and more of it. `NSFileCoordinator` and
+`NSFilePresenter` change how every read and write in the app behaves; getting
+them wrong replaces a rare loss with a common deadlock. The failure mode this
+prevents — a write landing mid-sync — cannot be reproduced without two machines
+and a live container.
+
+Do it after `0046`, with a real iCloud vault, and give it its own session.
