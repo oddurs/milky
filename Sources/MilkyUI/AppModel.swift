@@ -491,7 +491,7 @@ public final class AppModel: ObservableObject {
             } catch {
                 await MainActor.run {
                     self?.isSyncing = false
-                    self?.errorMessage = error.localizedDescription
+                    self?.errorMessage = AppModel.describe(error)
                 }
             }
         }
@@ -504,8 +504,16 @@ public final class AppModel: ObservableObject {
             try sync.initialize()
             refreshGitStatus()
         } catch {
-            errorMessage = error.localizedDescription
+            errorMessage = AppModel.describe(error)
         }
+    }
+
+    /// Some failures carry a fix. Dropping it on the floor is how a first sync
+    /// turns into "Milky can't sync" rather than "run these two commands".
+    static func describe(_ error: Error) -> String {
+        let message = error.localizedDescription
+        guard let suggestion = (error as? LocalizedError)?.recoverySuggestion else { return message }
+        return message + "\n\n" + suggestion
     }
 
     // MARK: - Preferences

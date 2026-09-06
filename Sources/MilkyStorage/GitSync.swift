@@ -19,16 +19,53 @@ public final class GitSync {
     public enum SyncError: LocalizedError {
         case gitUnavailable
         case notARepository
+        case missingIdentity
         case command(String)
 
         public var errorDescription: String? {
             switch self {
-            case .gitUnavailable: return "Git isn't installed. Install the Xcode Command Line Tools to enable sync."
-            case .notARepository: return "This vault isn't a git repository."
-            case .command(let message): return message
+            case .gitUnavailable:
+                return "Git isn't installed. Install the Xcode Command Line Tools to enable sync."
+            case .notARepository:
+                return "This vault isn't a git repository."
+            case .missingIdentity:
+                return "Git needs a name and an email address before it can record a commit."
+            case .command(let message):
+                return message
+            }
+        }
+
+        /// What to do about it, when there is something to do.
+        public var recoverySuggestion: String? {
+            switch self {
+            case .missingIdentity:
+                return """
+                    Set them once and every repository on this Mac can use them:
+
+                        git config --global user.name "Your Name"
+                        git config --global user.email you@example.com
+                    """
+            default: return nil
             }
         }
     }
+
+    /// Files a vault under version control should have. Seeded on init, never
+    /// rewritten — a vault that already has its own opinion keeps it.
+    static let seededFiles: [(name: String, contents: String)] = [
+        (".gitignore", """
+            # macOS
+            .DS_Store
+
+            # Milky
+            .milky/cache/
+            """),
+        (".gitattributes", """
+            # Notes are text everywhere, whatever platform writes them.
+            * text=auto eol=lf
+            *.md diff=markdown
+            """),
+    ]
 
     public let root: URL
     public init(root: URL) { self.root = root }
@@ -56,11 +93,38 @@ public final class GitSync {
 
     // MARK: - Actions
 
+    /// Whether git can attribute a commit. Unset on a fresh Mac, and the first
+    /// sync fails with a wall of git's own prose if it is not checked first.
+    public var hasIdentity: Bool {
+        let name = (try? run(["config", "user.name"])) ?? ""
+        let email = (try? run(["config", "user.email"])) ?? ""
+        return !name.isEmpty && !email.isEmpty
+    }
+
     public func initialize() throws {
         guard isAvailable else { throw SyncError.gitUnavailable }
         _ = try run(["init"])
+        try seedFiles()
+        guard hasIdentity else { throw SyncError.missingIdentity }
         _ = try? run(["add", "-A"])
         _ = try? run(["commit", "-m", "Initial vault commit"])
+    }
+
+    /// Writes `.gitignore` and `.gitattributes` if the vault has neither.
+    ///
+    /// Without the first, every commit carries a `.DS_Store`. Without the
+    /// second, opening the vault from Windows or Linux churns line endings
+    /// through every file it touches.
+    @discardableResult
+    public func seedFiles() throws -> [String] {
+        var written: [String] = []
+        for file in GitSync.seededFiles {
+            let url = root.appending(path: file.name)
+            guard !FileManager.default.fileExists(atPath: url.path) else { continue }
+            try (file.contents + "\n").write(to: url, atomically: true, encoding: .utf8)
+            written.append(file.name)
+        }
+        return written
     }
 
     /// Commit local edits, rebase on top of the remote, then push. Rebase (not merge)
@@ -72,6 +136,9 @@ public final class GitSync {
 
         let dirty = ((try? run(["status", "--porcelain"])) ?? "")
         if !dirty.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            // Checked before staging, so the failure names the cause instead of
+            // surfacing git's "Please tell me who you are".
+            guard hasIdentity else { throw SyncError.missingIdentity }
             _ = try run(["add", "-A"])
             _ = try run(["commit", "-m", message ?? GitSync.defaultMessage()])
         }
