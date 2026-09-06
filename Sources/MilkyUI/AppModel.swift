@@ -44,6 +44,24 @@ public final class AppModel: ObservableObject {
     @Published public var draft: String = ""
     @Published public private(set) var isDirty = false
 
+    /// The note changed on disk while it was being edited. Autosaving stops
+    /// until this is answered, so neither version is lost by default.
+    @Published public private(set) var conflict: Conflict?
+
+    /// What the file looked like when it was read, so a write can tell whether
+    /// anyone else has touched it since.
+    private var loadedModified: Date?
+
+    public struct Conflict: Identifiable, Equatable {
+        public let id = UUID()
+        public var noteID: Note.ID
+        public var title: String
+        public var mine: String
+        public var theirs: String
+    }
+
+    public enum ConflictResolution { case keepMine, takeTheirs, keepBoth }
+
     // MARK: - Sync
 
     @Published public private(set) var gitStatus: GitSync.Status = .none
@@ -127,10 +145,15 @@ public final class AppModel: ObservableObject {
         refreshGitStatus()
         if let previousSelection, notes.contains(where: { $0.id == previousSelection }) {
             selectedNoteID = previousSelection
-            // Only take the on-disk version if the user has nothing unsaved.
-            if !isDirty, let note = notes.first(where: { $0.id == previousSelection }), note.text != draft {
-                draft = note.text
-                lastLoadedNoteID = nil
+            if let note = notes.first(where: { $0.id == previousSelection }), note.text != draft {
+                if isDirty {
+                    // Edited here and changed there. Do not pick a winner.
+                    raiseConflict(for: note)
+                } else {
+                    draft = note.text
+                    loadedModified = Vault.modificationDate(of: note.url)
+                    lastLoadedNoteID = nil
+                }
             }
         } else {
             selectedNoteID = visibleNotes.first?.id
@@ -239,7 +262,15 @@ public final class AppModel: ObservableObject {
         flushPendingSave()
         draft = note.text
         isDirty = false
+        adopt(note)
+    }
+
+    /// Takes a note as the open document. The id and the on-disk timestamp are
+    /// set together on purpose: separating them is how the write guard ends up
+    /// comparing against the *previous* note's file and inventing a conflict.
+    private func adopt(_ note: Note) {
         lastLoadedNoteID = note.id
+        loadedModified = Vault.modificationDate(of: note.url)
     }
 
     public func draftChanged(_ text: String) {
@@ -252,6 +283,8 @@ public final class AppModel: ObservableObject {
     /// Autosave is debounced rather than per-keystroke: it keeps disk writes (and
     /// therefore Dropbox/iCloud sync churn) down without risking more than a second of work.
     private func scheduleSave() {
+        // An unanswered conflict suspends autosave; resolving it resumes.
+        guard conflict == nil else { return }
         saveWork?.cancel()
         let work = DispatchWorkItem { [weak self] in self?.save() }
         saveWork = work
@@ -265,9 +298,11 @@ public final class AppModel: ObservableObject {
     }
 
     private func save() {
-        guard let vault, let note = selectedNote, isDirty else { return }
+        guard let vault, let note = selectedNote, isDirty, conflict == nil else { return }
         do {
-            try vault.write(draft, to: note.url)
+            // Guarded: refuses rather than overwriting a file someone else has
+            // written since it was read.
+            loadedModified = try vault.write(draft, to: note.url, expecting: loadedModified)
             isDirty = false
             if let index = notes.firstIndex(where: { $0.id == note.id }) {
                 notes[index].text = draft
@@ -275,8 +310,52 @@ public final class AppModel: ObservableObject {
             }
             tags = Array(Set(notes.flatMap(\.tags))).sorted()
             refreshVisible()
+        } catch is Vault.ConflictError {
+            raiseConflict(for: note)
         } catch {
             errorMessage = "Couldn't save “\(note.title)”: \(error.localizedDescription)"
+        }
+    }
+
+    /// Both versions are kept and the reader chooses. Nothing is written until
+    /// they do.
+    private func raiseConflict(for note: Note) {
+        let theirs = (try? String(contentsOf: note.url, encoding: .utf8)) ?? ""
+        guard theirs != draft else {
+            // Identical content: whoever wrote it agreed with us.
+            loadedModified = Vault.modificationDate(of: note.url)
+            isDirty = false
+            return
+        }
+        saveWork?.cancel()
+        conflict = Conflict(noteID: note.id, title: note.title, mine: draft, theirs: theirs)
+    }
+
+    public func resolve(_ resolution: ConflictResolution) {
+        guard let vault, let conflict, let note = notes.first(where: { $0.id == conflict.noteID })
+        else { self.conflict = nil; return }
+        self.conflict = nil
+
+        do {
+            switch resolution {
+            case .keepMine:
+                // Deliberate overwrite: no expectation, because the reader has
+                // seen the other version and chosen against it.
+                try vault.write(conflict.mine, to: note.url)
+            case .takeTheirs:
+                draft = conflict.theirs
+            case .keepBoth:
+                let stamp = ISO8601DateFormatter.conflictStamp.string(from: Date())
+                _ = try vault.createNote(title: "\(note.title) (conflicted copy \(stamp))",
+                                         in: note.folder, body: conflict.mine)
+                draft = conflict.theirs
+            }
+            isDirty = false
+            lastLoadedNoteID = nil
+            reload()
+            adopt(note)
+        } catch {
+            errorMessage = "Couldn't resolve the conflict: \(error.localizedDescription)"
         }
     }
 
@@ -293,7 +372,7 @@ public final class AppModel: ObservableObject {
             refreshVisible()
             selectedNoteID = note.id
             draft = note.text
-            lastLoadedNoteID = note.id
+            adopt(note)
             isDirty = false
         } catch {
             errorMessage = "Couldn't create the note: \(error.localizedDescription)"
@@ -309,7 +388,7 @@ public final class AppModel: ObservableObject {
             refreshVisible()
             if selectedNoteID == note.id {
                 selectedNoteID = renamed.id
-                lastLoadedNoteID = renamed.id
+                adopt(renamed)
             }
         } catch {
             errorMessage = "Couldn't rename the note: \(error.localizedDescription)"
@@ -343,7 +422,7 @@ public final class AppModel: ObservableObject {
             refreshVisible()
             if selectedNoteID == note.id {
                 selectedNoteID = moved.id
-                lastLoadedNoteID = moved.id
+                adopt(moved)
             }
         } catch {
             errorMessage = "Couldn't move the note: \(error.localizedDescription)"
@@ -381,7 +460,7 @@ public final class AppModel: ObservableObject {
             refreshVisible()
             selectedNoteID = note.id
             draft = ""
-            lastLoadedNoteID = note.id
+            adopt(note)
         }
     }
 
@@ -446,4 +525,14 @@ public final class AppModel: ObservableObject {
         if size >= 11, size <= 28 { restored.bodySize = CGFloat(size) }
         theme = restored
     }
+}
+
+extension ISO8601DateFormatter {
+    /// Filename-safe, and sorts correctly: 2026-09-06 14.03.
+    static let conflictStamp: ISO8601DateFormatter = {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withFullDate, .withTime, .withDashSeparatorInDate,
+                                   .withColonSeparatorInTime, .withSpaceBetweenDateAndTime]
+        return formatter
+    }()
 }

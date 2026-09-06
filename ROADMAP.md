@@ -33,7 +33,6 @@ You can point Milky at a folder that git, Dropbox or iCloud is also writing to, 
 
 - [ ] `0015` Measure the editor on a very large note <sup>chore · p1 · performance</sup>
 - [ ] `0021` Surface files the vault cannot read <sup>bug · p1 · reliability</sup>
-- [ ] `0022` An external change is silently discarded while you are typing <sup>bug · p0 · reliability</sup>
 - [ ] `0045` Opening a vault reads every file on the main thread <sup>bug · p0 · cloud</sup>
 - [ ] `0046` iCloud files that are not downloaded are invisible <sup>bug · p0 · cloud</sup>
 - [ ] `0047` Coordinate reads and writes with the system <sup>feature · p1 · cloud</sup>
@@ -41,6 +40,10 @@ You can point Milky at a folder that git, Dropbox or iCloud is also writing to, 
 - [ ] `0049` Renaming a note to change only its case creates a duplicate <sup>bug · p1</sup>
 - [ ] `0050` A merge conflict leaves you in the terminal <sup>feature · p1 · sync</sup>
 - [ ] `0051` Set a git vault up properly on init <sup>chore · p1 · sync</sup>
+
+### in progress
+
+- [ ] `0022` An external change is silently discarded while you are typing <sup>bug · p0 · reliability</sup>
 
 ## v0.3 — It behaves like Notes
 

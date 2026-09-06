@@ -68,8 +68,46 @@ public final class Vault {
 
     // MARK: - Mutation
 
+    /// Refused because the file changed underneath the editor.
+    public struct ConflictError: LocalizedError, Equatable {
+        public let url: URL
+        public var errorDescription: String? {
+            "\(url.lastPathComponent) changed on disk since it was opened."
+        }
+    }
+
+    /// Writes only if the file still looks the way it did when it was read.
+    ///
+    /// The editor cannot rely on the file watcher alone: FSEvents coalesces, can
+    /// be missed, and says nothing about *which* version it saw. Comparing the
+    /// modification date at the moment of writing is the check that actually
+    /// holds, and it is what stops a `git pull` being overwritten by an autosave
+    /// half a second later.
+    @discardableResult
+    public func write(_ text: String, to url: URL, expecting modified: Date?) throws -> Date {
+        if let modified {
+            guard let current = Vault.modificationDate(of: url) else {
+                // Gone from under us: deleted or replaced while it was open.
+                throw ConflictError(url: url)
+            }
+            guard abs(current.timeIntervalSince(modified)) < 0.001 else {
+                throw ConflictError(url: url)
+            }
+        }
+        try text.write(to: url, atomically: true, encoding: .utf8)
+        return Vault.modificationDate(of: url) ?? Date()
+    }
+
+    /// Unconditional write, for callers that own the file outright.
     public func write(_ text: String, to url: URL) throws {
         try text.write(to: url, atomically: true, encoding: .utf8)
+    }
+
+    /// Read through `FileManager` rather than `URL.resourceValues`, which caches
+    /// on the URL instance — reusing a `Note`'s URL would hand back the value
+    /// from the first read and the guard would never fire.
+    public static func modificationDate(of url: URL) -> Date? {
+        (try? FileManager.default.attributesOfItem(atPath: url.path))?[.modificationDate] as? Date
     }
 
     public func createNote(title: String, in folder: String = "", body: String = "") throws -> Note {
