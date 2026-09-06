@@ -129,6 +129,27 @@ public final class Vault {
         let clean = Vault.sanitize(newTitle)
         guard !clean.isEmpty, clean != note.title else { return note }
         let directory = note.url.deletingLastPathComponent()
+
+        // Changing only the case is not a collision, but APFS is case-insensitive
+        // by default, so `fileExists` reports the note's own file and uniqueURL
+        // would hand back "Note 2". Go via a temporary name instead.
+        if clean.lowercased() == note.title.lowercased() {
+            let target = directory.appending(path: "\(clean).\(note.url.pathExtension)")
+            let staging = directory.appending(path: ".milky-rename-\(UUID().uuidString)")
+            try FileManager.default.moveItem(at: note.url, to: staging)
+            do {
+                try FileManager.default.moveItem(at: staging, to: target)
+            } catch {
+                // Never leave the note stranded under a dotfile name.
+                try? FileManager.default.moveItem(at: staging, to: note.url)
+                throw error
+            }
+            var renamed = note
+            renamed.url = target
+            renamed.relativePath = Vault.relativePath(of: target, from: root)
+            return renamed
+        }
+
         let target = Vault.uniqueURL(for: clean, in: directory, extension: note.url.pathExtension)
         try FileManager.default.moveItem(at: note.url, to: target)
         var moved = note
