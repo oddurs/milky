@@ -2,7 +2,7 @@
 id: 49
 title: Renaming a note to change only its case creates a duplicate
 type: bug
-status: doing
+status: done
 milestone: v0.2
 assignee: Oddur Sigurdsson
 created: 2026-09-05

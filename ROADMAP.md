@@ -25,7 +25,7 @@ A stranger can download Milky, open it, and it does not get blocked by Gatekeepe
 
 ## v0.2 — Nothing is lost
 
-`#·········` 10% · 1 of 10 done · due 2026-11-15
+`##········` 20% · 2 of 10 done · due 2026-11-15
 
 You can point Milky at a folder that git, Dropbox or iCloud is also writing to, and it never loses or quietly hides your work. Correctness before features.
 
@@ -40,13 +40,10 @@ You can point Milky at a folder that git, Dropbox or iCloud is also writing to, 
 - [ ] `0050` A merge conflict leaves you in the terminal <sup>feature · p1 · sync</sup>
 - [ ] `0051` Set a git vault up properly on init <sup>chore · p1 · sync</sup>
 
-### in progress
-
-- [ ] `0049` Renaming a note to change only its case creates a duplicate <sup>bug · p1</sup>
-
 ### done
 
 - [x] `0022` An external change is silently discarded while you are typing <sup>bug · p0 · reliability</sup>
+- [x] `0049` Renaming a note to change only its case creates a duplicate <sup>bug · p1</sup>
 
 ## v0.3 — It behaves like Notes
 
