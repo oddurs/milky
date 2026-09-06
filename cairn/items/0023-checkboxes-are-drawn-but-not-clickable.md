@@ -2,7 +2,7 @@
 id: 23
 title: Checkboxes are drawn but not clickable
 type: feature
-status: doing
+status: done
 milestone: v0.3
 assignee: Oddur Sigurdsson
 labels:

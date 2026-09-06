@@ -47,7 +47,7 @@ You can point Milky at a folder that git, Dropbox or iCloud is also writing to, 
 
 ## v0.3 — It behaves like Notes
 
-`··········` 0% · 0 of 10 done · due 2026-12-15
+`#·········` 10% · 1 of 10 done · due 2026-12-15
 
 The Apple half of the idea. Everything you reach for out of habit — clicking a checkbox, pinning, sorting, dragging a note into a folder — is there.
 
@@ -63,9 +63,9 @@ The Apple half of the idea. Everything you reach for out of habit — clicking a
 - [ ] `0043` Escalating select all <sup>feature · p3 · parity</sup>
 - [ ] `0052` Decide where per-vault settings live <sup>chore · p1 · design</sup>
 
-### in progress
+### done
 
-- [ ] `0023` Checkboxes are drawn but not clickable <sup>feature · p0 · parity</sup>
+- [x] `0023` Checkboxes are drawn but not clickable <sup>feature · p0 · parity</sup>
 
 ## v0.4 — The vault is a graph
 
