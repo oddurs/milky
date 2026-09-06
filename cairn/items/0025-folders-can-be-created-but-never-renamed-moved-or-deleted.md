@@ -2,7 +2,7 @@
 id: 25
 title: Folders can be created but never renamed, moved or deleted
 type: feature
-status: doing
+status: done
 milestone: v0.3
 assignee: Oddur Sigurdsson
 labels:
