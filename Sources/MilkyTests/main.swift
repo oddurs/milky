@@ -178,6 +178,51 @@ t.suite("vault") {
     t.expect(!vault.notes.contains { $0.relativePath.contains(".git") }, "the .git directory is skipped")
 }
 
+t.suite("write guard") {
+    let root = URL(fileURLWithPath: NSTemporaryDirectory())
+        .appending(path: "milky-guard-\(ProcessInfo.processInfo.processIdentifier)")
+    try? FileManager.default.removeItem(at: root)
+    try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+    defer { try? FileManager.default.removeItem(at: root) }
+
+    let vault = Vault(root: root)
+    let note = try vault.createNote(title: "Guarded", body: "original")
+    let stamp = Vault.modificationDate(of: note.url)
+    t.expect(stamp != nil, "a written file has a modification date")
+
+    // Unchanged on disk: the write goes through and hands back a new stamp.
+    let after = try vault.write("mine", to: note.url, expecting: stamp)
+    t.equal(try String(contentsOf: note.url, encoding: .utf8), "mine", "an uncontested write lands")
+    t.expect(after != stamp, "the returned stamp advances")
+
+    // Someone else writes. The editor still believes the old stamp.
+    Thread.sleep(forTimeInterval: 0.02)
+    try "theirs".write(to: note.url, atomically: true, encoding: .utf8)
+
+    var refused = false
+    do { _ = try vault.write("mine again", to: note.url, expecting: after) }
+    catch is Vault.ConflictError { refused = true }
+    t.expect(refused, "a write over a changed file is refused")
+    t.equal(try String(contentsOf: note.url, encoding: .utf8), "theirs",
+            "and the incoming version survives untouched")
+
+    // Deleted underneath is a conflict too, not a silent recreate.
+    let doomed = try vault.createNote(title: "Doomed", body: "x")
+    let doomedStamp = Vault.modificationDate(of: doomed.url)
+    try FileManager.default.removeItem(at: doomed.url)
+    var refusedMissing = false
+    do { _ = try vault.write("resurrect", to: doomed.url, expecting: doomedStamp) }
+    catch is Vault.ConflictError { refusedMissing = true }
+    t.expect(refusedMissing, "writing over a file that was deleted is refused")
+
+    // No expectation means the caller owns the file outright.
+    let free = try vault.createNote(title: "Unguarded", body: "x")
+    try "forced".write(to: free.url, atomically: true, encoding: .utf8)
+    _ = try vault.write("overwrite", to: free.url, expecting: nil)
+    t.equal(try String(contentsOf: free.url, encoding: .utf8), "overwrite",
+            "an unguarded write is unconditional")
+}
+
 t.suite("vault kinds") {
     t.equal(VaultLocations.kind(of: URL(fileURLWithPath: "/Users/x/Dropbox/Notes")), .dropbox, "dropbox path")
     t.equal(VaultLocations.kind(of: URL(fileURLWithPath:

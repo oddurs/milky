@@ -2,12 +2,13 @@
 id: 22
 title: An external change is silently discarded while you are typing
 type: bug
-status: backlog
+status: doing
 milestone: v0.2
+assignee: Oddur Sigurdsson
 labels:
 - reliability
 created: 2026-09-05
-updated: 2026-09-05
+updated: 2026-09-06
 priority: p0
 effort: m
 area: storage

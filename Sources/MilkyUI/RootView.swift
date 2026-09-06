@@ -21,6 +21,17 @@ public struct RootView: View {
         // variant — a lime button title would be unreadable on a light sheet.
         .tint(Palette.accentInk)
         .restoresWindowFrame(named: "MilkyMainWindow")
+        .alert("“\(model.conflict?.title ?? "")” changed on disk",
+               isPresented: Binding(get: { model.conflict != nil },
+                                    set: { if !$0 { model.resolve(.keepBoth) } })) {
+            Button("Keep Both") { model.resolve(.keepBoth) }
+            Button("Keep Mine") { model.resolve(.keepMine) }
+            Button("Use the Version on Disk", role: .destructive) { model.resolve(.takeTheirs) }
+        } message: {
+            Text("Something else edited this note — a sync, a pull, or another app — "
+                 + "while you had unsaved changes.\n\nKeep Both saves yours alongside it, "
+                 + "so nothing is lost.")
+        }
         .alert("Something went wrong",
                isPresented: Binding(get: { model.errorMessage != nil },
                                     set: { if !$0 { model.errorMessage = nil } })) {
