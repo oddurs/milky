@@ -2,7 +2,7 @@
 id: 21
 title: Surface files the vault cannot read
 type: bug
-status: doing
+status: done
 milestone: v0.2
 assignee: Oddur Sigurdsson
 labels:

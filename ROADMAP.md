@@ -25,7 +25,7 @@ A stranger can download Milky, open it, and it does not get blocked by Gatekeepe
 
 ## v0.2 — Nothing is lost
 
-`#####·····` 50% · 5 of 10 done · due 2026-11-15
+`######····` 60% · 6 of 10 done · due 2026-11-15
 
 You can point Milky at a folder that git, Dropbox or iCloud is also writing to, and it never loses or quietly hides your work. Correctness before features.
 
@@ -36,12 +36,9 @@ You can point Milky at a folder that git, Dropbox or iCloud is also writing to, 
 - [ ] `0047` Coordinate reads and writes with the system <sup>feature · p1 · cloud</sup>
 - [ ] `0050` A merge conflict leaves you in the terminal <sup>feature · p1 · sync</sup>
 
-### in progress
-
-- [ ] `0021` Surface files the vault cannot read <sup>bug · p1 · reliability</sup>
-
 ### done
 
+- [x] `0021` Surface files the vault cannot read <sup>bug · p1 · reliability</sup>
 - [x] `0022` An external change is silently discarded while you are typing <sup>bug · p0 · reliability</sup>
 - [x] `0045` Opening a vault reads every file on the main thread <sup>bug · p0 · cloud</sup>
 - [x] `0048` The watcher rebuilds the index on every git write <sup>bug · p1 · sync</sup>
