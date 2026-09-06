@@ -203,6 +203,12 @@ filter = "status=planned"
 sort = "priority,milestone"
 
 [[view]]
+name = "cloud"
+description = "Everything that has to be right before a vault can live in iCloud or Dropbox"
+filter = "label=cloud,category!=done"
+sort = "priority,milestone"
+
+[[view]]
 name = "triage"
 description = "Items that still need a milestone or a priority"
 filter = "milestone=,category!=done"

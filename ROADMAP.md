@@ -4,9 +4,13 @@
 
 ## v0.1 — Ship the Mac app
 
-`########··` 75% · 6 of 8 done · due 2026-10-15
+`#######···` 67% · 6 of 9 done · due 2026-10-15
 
 A stranger can download Milky, open it, and it does not get blocked by Gatekeeper.
+
+### backlog
+
+- [ ] `0053` The welcome screen promises iCloud we cannot honour <sup>bug · p0 · cloud · release</sup>
 
 ### blocked
 

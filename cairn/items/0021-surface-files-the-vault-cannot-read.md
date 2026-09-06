@@ -6,6 +6,8 @@ status: backlog
 milestone: v0.2
 labels:
 - reliability
+depends_on:
+- 45
 created: 2026-09-05
 updated: 2026-09-05
 priority: p1
