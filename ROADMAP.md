@@ -24,7 +24,7 @@ A stranger can download Milky, open it, and it does not get blocked by Gatekeepe
 
 ## v0.2 — Nothing is lost
 
-`··········` 0% · 0 of 3 done · due 2026-11-15
+`··········` 0% · 0 of 10 done · due 2026-11-15
 
 You can point Milky at a folder that git, Dropbox or iCloud is also writing to, and it never loses or quietly hides your work. Correctness before features.
 
@@ -33,10 +33,17 @@ You can point Milky at a folder that git, Dropbox or iCloud is also writing to, 
 - [ ] `0015` Measure the editor on a very large note <sup>chore · p1 · performance</sup>
 - [ ] `0021` Surface files the vault cannot read <sup>bug · p1 · reliability</sup>
 - [ ] `0022` An external change is silently discarded while you are typing <sup>bug · p0 · reliability</sup>
+- [ ] `0045` Opening a vault reads every file on the main thread <sup>bug · p0 · cloud</sup>
+- [ ] `0046` iCloud files that are not downloaded are invisible <sup>bug · p0 · cloud</sup>
+- [ ] `0047` Coordinate reads and writes with the system <sup>feature · p1 · cloud</sup>
+- [ ] `0048` The watcher rebuilds the index on every git write <sup>bug · p1 · sync</sup>
+- [ ] `0049` Renaming a note to change only its case creates a duplicate <sup>bug · p1</sup>
+- [ ] `0050` A merge conflict leaves you in the terminal <sup>feature · p1 · sync</sup>
+- [ ] `0051` Set a git vault up properly on init <sup>chore · p1 · sync</sup>
 
 ## v0.3 — It behaves like Notes
 
-`··········` 0% · 0 of 9 done · due 2026-12-15
+`··········` 0% · 0 of 10 done · due 2026-12-15
 
 The Apple half of the idea. Everything you reach for out of habit — clicking a checkbox, pinning, sorting, dragging a note into a folder — is there.
 
@@ -51,6 +58,7 @@ The Apple half of the idea. Everything you reach for out of habit — clicking a
 - [ ] `0038` Duplicate a note <sup>feature · p3 · parity</sup>
 - [ ] `0042` Drag a block to reorder it <sup>feature · p2 · parity</sup>
 - [ ] `0043` Escalating select all <sup>feature · p3 · parity</sup>
+- [ ] `0052` Decide where per-vault settings live <sup>chore · p1 · design</sup>
 
 ## v0.4 — The vault is a graph
 

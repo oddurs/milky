@@ -6,6 +6,8 @@ status: backlog
 milestone: v0.6
 labels:
 - markdown
+depends_on:
+- 52
 created: 2026-09-05
 updated: 2026-09-05
 priority: p1

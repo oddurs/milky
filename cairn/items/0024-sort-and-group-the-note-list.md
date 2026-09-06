@@ -6,6 +6,8 @@ status: backlog
 milestone: v0.3
 labels:
 - parity
+depends_on:
+- 52
 created: 2026-09-05
 updated: 2026-09-05
 priority: p1
