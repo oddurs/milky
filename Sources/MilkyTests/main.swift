@@ -178,6 +178,34 @@ t.suite("vault") {
     t.expect(!vault.notes.contains { $0.relativePath.contains(".git") }, "the .git directory is skipped")
 }
 
+t.suite("case-only rename") {
+    let root = URL(fileURLWithPath: NSTemporaryDirectory())
+        .appending(path: "milky-case-\(ProcessInfo.processInfo.processIdentifier)")
+    try? FileManager.default.removeItem(at: root)
+    try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+    defer { try? FileManager.default.removeItem(at: root) }
+
+    let vault = Vault(root: root)
+    let note = try vault.createNote(title: "meeting notes", body: "kept")
+    let renamed = try vault.rename(note, to: "Meeting Notes")
+
+    // fileExists is case-insensitive here, so ask the directory for the real name.
+    let names = try FileManager.default.contentsOfDirectory(atPath: root.path).sorted()
+    t.equal(names, ["Meeting Notes.md"], "the file is renamed, not duplicated")
+    t.equal(renamed.title, "Meeting Notes", "the note carries the new title")
+    t.equal(try String(contentsOf: renamed.url, encoding: .utf8), "kept", "content survives")
+
+    // A genuine collision must still be disambiguated.
+    _ = try vault.createNote(title: "Other", body: "x")
+    let clash = try vault.rename(renamed, to: "Other")
+    t.equal(clash.title, "Other 2", "a real collision still gets a suffix")
+
+    // No staging files left behind.
+    let leftovers = try FileManager.default.contentsOfDirectory(atPath: root.path)
+        .filter { $0.hasPrefix(".milky-rename") }
+    t.equal(leftovers.count, 0, "no staging files are left behind")
+}
+
 t.suite("write guard") {
     let root = URL(fileURLWithPath: NSTemporaryDirectory())
         .appending(path: "milky-guard-\(ProcessInfo.processInfo.processIdentifier)")
