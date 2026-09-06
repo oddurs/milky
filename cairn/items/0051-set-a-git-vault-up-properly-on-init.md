@@ -2,7 +2,7 @@
 id: 51
 title: Set a git vault up properly on init
 type: chore
-status: doing
+status: done
 milestone: v0.2
 assignee: Oddur Sigurdsson
 labels:
