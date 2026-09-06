@@ -3,7 +3,7 @@ id: 33
 title: Callouts
 type: feature
 status: backlog
-milestone: later
+milestone: v0.6
 labels:
 - markdown
 created: 2026-09-05

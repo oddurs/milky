@@ -3,7 +3,7 @@ id: 16
 title: Generate an Xcode project for the iOS target
 type: chore
 status: backlog
-milestone: v0.3
+milestone: v1.0
 labels:
 - ios
 created: 2026-09-05

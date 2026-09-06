@@ -3,7 +3,7 @@ id: 34
 title: Print and export to PDF
 type: feature
 status: backlog
-milestone: later
+milestone: v0.8
 labels:
 - parity
 created: 2026-09-05

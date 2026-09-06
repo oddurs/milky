@@ -3,7 +3,7 @@ id: 28
 title: Read frontmatter as properties, and support aliases
 type: feature
 status: backlog
-milestone: v0.2
+milestone: v0.4
 labels:
 - links
 created: 2026-09-05

@@ -3,7 +3,7 @@ id: 20
 title: Move the test suite onto XCTest
 type: chore
 status: backlog
-milestone: v0.3
+milestone: v1.0
 labels:
 - testing
 depends_on:

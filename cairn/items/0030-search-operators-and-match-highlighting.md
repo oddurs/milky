@@ -3,7 +3,7 @@ id: 30
 title: Search operators and match highlighting
 type: feature
 status: backlog
-milestone: v0.2
+milestone: v0.5
 labels:
 - search
 created: 2026-09-05

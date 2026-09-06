@@ -3,7 +3,7 @@ id: 37
 title: Embed one note inside another
 type: feature
 status: backlog
-milestone: later
+milestone: v0.6
 labels:
 - links
 created: 2026-09-05

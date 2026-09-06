@@ -3,7 +3,7 @@ id: 31
 title: Open a note in its own window
 type: feature
 status: backlog
-milestone: later
+milestone: v0.8
 labels:
 - parity
 created: 2026-09-05

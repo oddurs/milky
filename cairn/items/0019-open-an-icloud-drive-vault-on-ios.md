@@ -3,7 +3,7 @@ id: 19
 title: Open an iCloud Drive vault on iOS
 type: feature
 status: backlog
-milestone: v0.3
+milestone: v1.0
 labels:
 - ios
 depends_on:

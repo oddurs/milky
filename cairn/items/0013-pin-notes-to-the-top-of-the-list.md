@@ -3,7 +3,7 @@ id: 13
 title: Pin notes to the top of the list
 type: feature
 status: backlog
-milestone: v0.2
+milestone: v0.3
 labels:
 - parity
 created: 2026-09-05

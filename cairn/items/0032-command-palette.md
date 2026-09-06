@@ -3,7 +3,7 @@ id: 32
 title: Command palette
 type: feature
 status: backlog
-milestone: later
+milestone: v0.8
 labels:
 - keyboard
 created: 2026-09-05

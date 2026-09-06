@@ -3,7 +3,7 @@ id: 18
 title: iOS app shell
 type: feature
 status: backlog
-milestone: v0.3
+milestone: v1.0
 labels:
 - ios
 depends_on:

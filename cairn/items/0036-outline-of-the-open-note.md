@@ -3,7 +3,7 @@ id: 36
 title: Outline of the open note
 type: feature
 status: backlog
-milestone: later
+milestone: v0.8
 labels:
 - navigation
 created: 2026-09-05

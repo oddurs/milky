@@ -3,7 +3,7 @@ id: 11
 title: Make search hold up on a large vault
 type: feature
 status: backlog
-milestone: v0.2
+milestone: v0.5
 labels:
 - performance
 created: 2026-09-05

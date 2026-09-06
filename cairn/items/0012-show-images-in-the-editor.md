@@ -3,7 +3,7 @@ id: 12
 title: Show images in the editor
 type: feature
 status: backlog
-milestone: v0.2
+milestone: v0.6
 labels:
 - markdown
 created: 2026-09-05

@@ -3,7 +3,7 @@ id: 27
 title: Link to a heading or a block
 type: feature
 status: backlog
-milestone: v0.2
+milestone: v0.4
 labels:
 - links
 created: 2026-09-05

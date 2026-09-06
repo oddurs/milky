@@ -3,7 +3,7 @@ id: 17
 title: Port the editor to UIKit
 type: feature
 status: backlog
-milestone: v0.3
+milestone: v1.0
 labels:
 - ios
 depends_on:

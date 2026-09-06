@@ -4,13 +4,9 @@
 
 ## v0.1 — Ship the Mac app
 
-`#######···` 67% · 6 of 9 done · due 2026-10-15
+`########··` 75% · 6 of 8 done · due 2026-10-15
 
 A stranger can download Milky, open it, and it does not get blocked by Gatekeeper.
-
-### in progress
-
-- [ ] `0021` Surface files the vault cannot read <sup>bug · p1 · reliability</sup>
 
 ### blocked
 
@@ -26,36 +22,108 @@ A stranger can download Milky, open it, and it does not get blocked by Gatekeepe
 - [x] `0006` Present the appearance controls <sup>feature · p1 · editor</sup>
 - [x] `0008` Deploy the landing page <sup>chore · p1 · release</sup>
 
-## v0.2 — Daily driver
+## v0.2 — Nothing is lost
 
-`··········` 0% · 0 of 16 done · due 2026-12-15
+`··········` 0% · 0 of 3 done · due 2026-11-15
 
-The things you miss on day two: jumping between notes, backlinks, images, search that holds up on a real vault.
+You can point Milky at a folder that git, Dropbox or iCloud is also writing to, and it never loses or quietly hides your work. Correctness before features.
+
+### backlog
+
+- [ ] `0015` Measure the editor on a very large note <sup>chore · p1 · performance</sup>
+- [ ] `0022` An external change is silently discarded while you are typing <sup>bug · p0 · reliability</sup>
+
+### in progress
+
+- [ ] `0021` Surface files the vault cannot read <sup>bug · p1 · reliability</sup>
+
+## v0.3 — It behaves like Notes
+
+`··········` 0% · 0 of 9 done · due 2026-12-15
+
+The Apple half of the idea. Everything you reach for out of habit — clicking a checkbox, pinning, sorting, dragging a note into a folder — is there.
+
+### backlog
+
+- [ ] `0013` Pin notes to the top of the list <sup>feature · p2 · parity</sup>
+- [ ] `0014` Restore deleted notes from inside the app <sup>feature · p2 · parity</sup>
+- [ ] `0023` Checkboxes are drawn but not clickable <sup>feature · p0 · parity</sup>
+- [ ] `0024` Sort and group the note list <sup>feature · p1 · parity</sup>
+- [ ] `0025` Folders can be created but never renamed, moved or deleted <sup>feature · p1 · parity</sup>
+- [ ] `0026` Drag and drop <sup>feature · p1 · parity</sup>
+- [ ] `0038` Duplicate a note <sup>feature · p3 · parity</sup>
+- [ ] `0042` Drag a block to reorder it <sup>feature · p2 · parity</sup>
+- [ ] `0043` Escalating select all <sup>feature · p3 · parity</sup>
+
+## v0.4 — The vault is a graph
+
+`··········` 0% · 0 of 6 done · due 2027-01-31
+
+The Obsidian half. Notes point at each other and the app knows it: links resolve to headings, aliases work, and typing [[ helps.
 
 ### backlog
 
 - [ ] `0009` Quick switcher <sup>feature · p0 · keyboard</sup>
 - [ ] `0010` Show backlinks for the open note <sup>feature · p1 · links</sup>
-- [ ] `0011` Make search hold up on a large vault <sup>feature · p1 · performance</sup>
-- [ ] `0012` Show images in the editor <sup>feature · p1 · markdown</sup>
-- [ ] `0013` Pin notes to the top of the list <sup>feature · p2 · parity</sup>
-- [ ] `0014` Restore deleted notes from inside the app <sup>feature · p2 · parity</sup>
-- [ ] `0015` Measure the editor on a very large note <sup>chore · p1 · performance</sup>
-- [ ] `0022` An external change is silently discarded while you are typing <sup>bug · p0 · reliability</sup>
-- [ ] `0023` Checkboxes are drawn but not clickable <sup>feature · p0 · parity</sup>
-- [ ] `0024` Sort and group the note list <sup>feature · p1 · parity</sup>
-- [ ] `0025` Folders can be created but never renamed, moved or deleted <sup>feature · p1 · parity</sup>
-- [ ] `0026` Drag and drop <sup>feature · p1 · parity</sup>
 - [ ] `0027` Link to a heading or a block <sup>feature · p1 · links</sup>
 - [ ] `0028` Read frontmatter as properties, and support aliases <sup>feature · p1 · links</sup>
 - [ ] `0029` Autocomplete when typing a wiki link <sup>feature · p1 · links</sup>
+- [ ] `0044` Nest tags in the sidebar <sup>feature · p2 · navigation</sup>
+
+## v0.5 — Holds up on a real vault
+
+`··········` 0% · 0 of 2 done · due 2027-02-28
+
+Five thousand notes and a search box that stays responsive, with results that show you where the match was.
+
+### backlog
+
+- [ ] `0011` Make search hold up on a large vault <sup>feature · p1 · performance</sup>
 - [ ] `0030` Search operators and match highlighting <sup>feature · p1 · search</sup>
 
-## v0.3 — iPhone
+## v0.6 — Notes hold more than prose
 
-`··········` 0% · 0 of 5 done · due 2027-03-01
+`··········` 0% · 0 of 3 done · due 2027-04-15
 
-The iOS app the shared core was kept AppKit-free for.
+Images, callouts and embeds — the point at which a note can carry what you actually want to put in it.
+
+### backlog
+
+- [ ] `0012` Show images in the editor <sup>feature · p1 · markdown</sup>
+- [ ] `0033` Callouts <sup>feature · p2 · markdown</sup>
+- [ ] `0037` Embed one note inside another <sup>feature · p3 · links</sup>
+
+## v0.7 — A place you want to write
+
+`··········` 0% · 0 of 3 done · due 2027-05-31
+
+The differentiating layer, borrowed from iA Writer and Notion: the page falls away around the sentence you are writing, and structure is manipulated directly rather than by cutting and pasting.
+
+### backlog
+
+- [ ] `0039` Focus mode <sup>feature · p1 · writing</sup>
+- [ ] `0040` Typewriter scrolling <sup>feature · p2 · writing</sup>
+- [ ] `0041` Slash commands <sup>feature · p1 · writing</sup>
+
+## v0.8 — Finish the Mac app
+
+`··········` 0% · 0 of 5 done · due 2027-06-30
+
+The remaining furniture of a Mac application: more than one window, a command palette, settings, printing.
+
+### backlog
+
+- [ ] `0031` Open a note in its own window <sup>feature · p2 · parity</sup>
+- [ ] `0032` Command palette <sup>feature · p2 · keyboard</sup>
+- [ ] `0034` Print and export to PDF <sup>feature · p2 · parity</sup>
+- [ ] `0035` Settings window <sup>feature · p2 · parity</sup>
+- [ ] `0036` Outline of the open note <sup>feature · p3 · navigation</sup>
+
+## v1.0 — iPhone
+
+`··········` 0% · 0 of 5 done · due 2027-08-31
+
+The iOS app the shared core was kept AppKit-free for. The Mac app is finished first, on purpose.
 
 ### backlog
 
@@ -64,21 +132,4 @@ The iOS app the shared core was kept AppKit-free for.
 - [ ] `0018` iOS app shell <sup>feature · p0 · ios</sup>
 - [ ] `0019` Open an iCloud Drive vault on iOS <sup>feature · p1 · ios</sup>
 - [ ] `0020` Move the test suite onto XCTest <sup>chore · p2 · testing</sup>
-
-## later — Someday
-
-`··········` 0% · 0 of 8 done
-
-Good ideas without a date yet.
-
-### backlog
-
-- [ ] `0031` Open a note in its own window <sup>feature · p2 · parity</sup>
-- [ ] `0032` Command palette <sup>feature · p2 · keyboard</sup>
-- [ ] `0033` Callouts <sup>feature · p2 · markdown</sup>
-- [ ] `0034` Print and export to PDF <sup>feature · p2 · parity</sup>
-- [ ] `0035` Settings window <sup>feature · p2 · parity</sup>
-- [ ] `0036` Outline of the open note <sup>feature · p3 · navigation</sup>
-- [ ] `0037` Embed one note inside another <sup>feature · p3 · links</sup>
-- [ ] `0038` Duplicate a note <sup>feature · p3 · parity</sup>
 

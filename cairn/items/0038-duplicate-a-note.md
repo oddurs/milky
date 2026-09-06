@@ -3,7 +3,7 @@ id: 38
 title: Duplicate a note
 type: feature
 status: backlog
-milestone: later
+milestone: v0.3
 labels:
 - parity
 created: 2026-09-05

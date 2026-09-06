@@ -3,7 +3,7 @@ id: 10
 title: Show backlinks for the open note
 type: feature
 status: backlog
-milestone: v0.2
+milestone: v0.4
 labels:
 - links
 created: 2026-09-05

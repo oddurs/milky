@@ -3,7 +3,7 @@ id: 9
 title: Quick switcher
 type: feature
 status: backlog
-milestone: v0.2
+milestone: v0.4
 labels:
 - keyboard
 created: 2026-09-05

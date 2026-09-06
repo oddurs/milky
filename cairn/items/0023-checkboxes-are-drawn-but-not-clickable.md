@@ -3,7 +3,7 @@ id: 23
 title: Checkboxes are drawn but not clickable
 type: feature
 status: backlog
-milestone: v0.2
+milestone: v0.3
 labels:
 - parity
 created: 2026-09-05

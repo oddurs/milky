@@ -136,15 +136,51 @@ description = "A stranger can download Milky, open it, and it does not get block
 
 [[milestone]]
 name = "v0.2"
-title = "Daily driver"
-due = "2026-12-15"
-description = "The things you miss on day two: jumping between notes, backlinks, images, search that holds up on a real vault."
+title = "Nothing is lost"
+due = "2026-11-15"
+description = "You can point Milky at a folder that git, Dropbox or iCloud is also writing to, and it never loses or quietly hides your work. Correctness before features."
 
 [[milestone]]
 name = "v0.3"
+title = "It behaves like Notes"
+due = "2026-12-15"
+description = "The Apple half of the idea. Everything you reach for out of habit — clicking a checkbox, pinning, sorting, dragging a note into a folder — is there."
+
+[[milestone]]
+name = "v0.4"
+title = "The vault is a graph"
+due = "2027-01-31"
+description = "The Obsidian half. Notes point at each other and the app knows it: links resolve to headings, aliases work, and typing [[ helps."
+
+[[milestone]]
+name = "v0.5"
+title = "Holds up on a real vault"
+due = "2027-02-28"
+description = "Five thousand notes and a search box that stays responsive, with results that show you where the match was."
+
+[[milestone]]
+name = "v0.6"
+title = "Notes hold more than prose"
+due = "2027-04-15"
+description = "Images, callouts and embeds — the point at which a note can carry what you actually want to put in it."
+
+[[milestone]]
+name = "v0.7"
+title = "A place you want to write"
+due = "2027-05-31"
+description = "The differentiating layer, borrowed from iA Writer and Notion: the page falls away around the sentence you are writing, and structure is manipulated directly rather than by cutting and pasting."
+
+[[milestone]]
+name = "v0.8"
+title = "Finish the Mac app"
+due = "2027-06-30"
+description = "The remaining furniture of a Mac application: more than one window, a command palette, settings, printing."
+
+[[milestone]]
+name = "v1.0"
 title = "iPhone"
-due = "2027-03-01"
-description = "The iOS app the shared core was kept AppKit-free for."
+due = "2027-08-31"
+description = "The iOS app the shared core was kept AppKit-free for. The Mac app is finished first, on purpose."
 
 [[milestone]]
 name = "later"
