@@ -55,7 +55,6 @@ The Apple half of the idea. Everything you reach for out of habit — clicking a
 
 - [ ] `0013` Pin notes to the top of the list <sup>feature · p2 · parity</sup>
 - [ ] `0014` Restore deleted notes from inside the app <sup>feature · p2 · parity</sup>
-- [ ] `0023` Checkboxes are drawn but not clickable <sup>feature · p0 · parity</sup>
 - [ ] `0024` Sort and group the note list <sup>feature · p1 · parity</sup>
 - [ ] `0025` Folders can be created but never renamed, moved or deleted <sup>feature · p1 · parity</sup>
 - [ ] `0026` Drag and drop <sup>feature · p1 · parity</sup>
@@ -63,6 +62,10 @@ The Apple half of the idea. Everything you reach for out of habit — clicking a
 - [ ] `0042` Drag a block to reorder it <sup>feature · p2 · parity</sup>
 - [ ] `0043` Escalating select all <sup>feature · p3 · parity</sup>
 - [ ] `0052` Decide where per-vault settings live <sup>chore · p1 · design</sup>
+
+### in progress
+
+- [ ] `0023` Checkboxes are drawn but not clickable <sup>feature · p0 · parity</sup>
 
 ## v0.4 — The vault is a graph
 

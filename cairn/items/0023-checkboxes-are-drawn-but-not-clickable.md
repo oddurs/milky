@@ -2,12 +2,13 @@
 id: 23
 title: Checkboxes are drawn but not clickable
 type: feature
-status: backlog
+status: doing
 milestone: v0.3
+assignee: Oddur Sigurdsson
 labels:
 - parity
 created: 2026-09-05
-updated: 2026-09-05
+updated: 2026-09-06
 priority: p0
 effort: s
 area: editor

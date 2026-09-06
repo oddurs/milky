@@ -14,6 +14,10 @@ public final class MilkyTextView: NSTextView {
     /// Character index → the glyph to draw there, or nil to draw nothing.
     /// Rebuilt on every restyle and read back by the layout manager delegate.
     private var mathGlyphs: [Int: Character?] = [:]
+
+    /// Where the drawn checkboxes are, so a click can find one. The glyph is
+    /// painted rather than typed, so nothing in the text view knows it is there.
+    private var checkboxes: [(range: NSRange, done: Bool)] = []
     private var isRestyling = false
     private var restyleWork: DispatchWorkItem?
     private var lastActiveParagraph: NSRange?
@@ -98,6 +102,14 @@ public final class MilkyTextView: NSTextView {
         let output = MarkdownStyler.apply(to: storage, theme: theme, activeParagraph: active)
         decorations = output.decorations
         links = output.links
+        checkboxes = output.decorations.compactMap { decoration in
+            guard case .marker(let range, let glyph) = decoration else { return nil }
+            switch glyph {
+            case .checkboxOpen: return (range, false)
+            case .checkboxDone: return (range, true)
+            case .bullet: return nil
+            }
+        }
 
         // Glyph generation is cached, so the layout manager has to be told the
         // substitutions changed before it will ask us again.
@@ -289,12 +301,66 @@ public final class MilkyTextView: NSTextView {
 
     public override func mouseDown(with event: NSEvent) {
         let point = convert(event.locationInWindow, from: nil)
+
+        // Checkboxes first: the box is drawn over hidden characters, so a hit
+        // test on the text would land on the marker and place a caret instead.
+        if event.clickCount == 1, let box = checkbox(at: point) {
+            toggleTask(in: box.range, currentlyDone: box.done)
+            return
+        }
+
         if event.clickCount == 1, let index = characterIndex(at: point),
            let hit = links.first(where: { NSLocationInRange(index, $0.0) }) {
             onLinkActivation?(hit.1, hit.2)
             return
         }
         super.mouseDown(with: event)
+    }
+
+    /// Development helper: clicks the first drawn checkbox by computing where it
+    /// is on screen and going through `checkbox(at:)`, so it exercises the real
+    /// hit test rather than calling the toggle directly.
+    @discardableResult
+    public func clickFirstCheckbox() -> Bool {
+        guard let layoutManager, let textContainer, let first = checkboxes.first,
+              let anchor = markerAnchor(first.range, layoutManager, textContainer, textContainerOrigin)
+        else { return false }
+        let size = theme.bodyFont.pointSize
+        let point = NSPoint(x: anchor.0.minX + size * 0.4, y: anchor.1 - size * 0.35)
+        guard let box = checkbox(at: point) else { return false }
+        toggleTask(in: box.range, currentlyDone: box.done)
+        return true
+    }
+
+    /// The checkbox under a point, if any. The target is grown a little past the
+    /// glyph — a 9pt circle is not a comfortable click target.
+    private func checkbox(at point: NSPoint) -> (range: NSRange, done: Bool)? {
+        guard let layoutManager, let textContainer else { return nil }
+        let origin = textContainerOrigin
+        for box in checkboxes {
+            guard let anchor = markerAnchor(box.range, layoutManager, textContainer, origin) else { continue }
+            let size = theme.bodyFont.pointSize
+            let target = NSRect(x: anchor.0.minX - 2,
+                                y: anchor.1 - size,
+                                width: size * 1.4,
+                                height: size * 1.3)
+            if target.contains(point) { return box }
+        }
+        return nil
+    }
+
+    /// Flips `[ ]` and `[x]` in the source. Goes through the usual edit path so
+    /// it lands on the undo stack like anything else typed.
+    private func toggleTask(in markerRange: NSRange, currentlyDone: Bool) {
+        let ns = string as NSString
+        guard NSMaxRange(markerRange) <= ns.length else { return }
+        let boxRange = ns.range(of: "\\[[ xX]\\]", options: .regularExpression, range: markerRange)
+        guard boxRange.location != NSNotFound else { return }
+
+        let replacement = currentlyDone ? "[ ]" : "[x]"
+        guard shouldChangeText(in: boxRange, replacementString: replacement) else { return }
+        textStorage?.replaceCharacters(in: boxRange, with: replacement)
+        didChangeText()
     }
 
     private func characterIndex(at point: NSPoint) -> Int? {
