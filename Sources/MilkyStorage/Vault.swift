@@ -213,6 +213,76 @@ public final class Vault {
         try FileManager.default.trashItem(at: note.url, resultingItemURL: nil)
     }
 
+    /// Renames a folder in place. Every note underneath moves with it, which the
+    /// caller sees after the next reload — paths are derived, not stored.
+    @discardableResult
+    public func renameFolder(_ path: String, to newName: String) throws -> String {
+        let clean = Vault.sanitize(newName)
+        let current = path.split(separator: "/").last.map(String.init) ?? path
+        guard !clean.isEmpty, clean != current else { return path }
+
+        let source = root.appending(path: path)
+        let parent = path.split(separator: "/").dropLast().joined(separator: "/")
+        let destination = parent.isEmpty ? clean : "\(parent)/\(clean)"
+
+        // Case-only renames need the same staging dance as notes do (0049).
+        if clean.lowercased() == current.lowercased() {
+            let staging = root.appending(path: parent).appending(path: ".milky-folder-\(UUID().uuidString)")
+            try FileManager.default.moveItem(at: source, to: staging)
+            do { try FileManager.default.moveItem(at: staging, to: root.appending(path: destination)) }
+            catch {
+                try? FileManager.default.moveItem(at: staging, to: source)
+                throw error
+            }
+            return destination
+        }
+
+        let target = try uniqueFolderURL(for: destination)
+        try FileManager.default.moveItem(at: source, to: target)
+        return Vault.relativePath(of: target, from: root)
+    }
+
+    /// Moves a folder under another one, or to the vault root when `parent` is empty.
+    @discardableResult
+    public func moveFolder(_ path: String, into parent: String) throws -> String {
+        let name = path.split(separator: "/").last.map(String.init) ?? path
+        let destination = parent.isEmpty ? name : "\(parent)/\(name)"
+        guard destination != path else { return path }
+        // Moving a folder inside itself would take the vault with it.
+        guard !destination.hasPrefix(path + "/") else { throw FolderError.intoItself }
+
+        let target = try uniqueFolderURL(for: destination)
+        try FileManager.default.createDirectory(at: target.deletingLastPathComponent(),
+                                                withIntermediateDirectories: true)
+        try FileManager.default.moveItem(at: root.appending(path: path), to: target)
+        return Vault.relativePath(of: target, from: root)
+    }
+
+    /// To the Finder trash, like notes — recoverable, not gone.
+    public func deleteFolder(_ path: String) throws {
+        try FileManager.default.trashItem(at: root.appending(path: path), resultingItemURL: nil)
+    }
+
+    /// How many notes a folder holds, including everything nested under it.
+    public func noteCount(inFolder path: String) -> Int {
+        Vault.entries(root: root).filter { $0.folder == path || $0.folder.hasPrefix(path + "/") }.count
+    }
+
+    public enum FolderError: LocalizedError {
+        case intoItself
+        public var errorDescription: String? { "A folder can't be moved inside itself." }
+    }
+
+    private func uniqueFolderURL(for path: String) throws -> URL {
+        var candidate = root.appending(path: path)
+        var counter = 2
+        while FileManager.default.fileExists(atPath: candidate.path) {
+            candidate = root.appending(path: "\(path) \(counter)")
+            counter += 1
+        }
+        return candidate
+    }
+
     public func createFolder(named name: String, in parent: String = "") throws -> String {
         let clean = Vault.sanitize(name)
         let path = parent.isEmpty ? clean : "\(parent)/\(clean)"

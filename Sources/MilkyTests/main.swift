@@ -178,6 +178,54 @@ t.suite("vault") {
     t.expect(!vault.notes.contains { $0.relativePath.contains(".git") }, "the .git directory is skipped")
 }
 
+t.suite("folder operations") {
+    let root = URL(fileURLWithPath: NSTemporaryDirectory())
+        .appending(path: "milky-folders-\(ProcessInfo.processInfo.processIdentifier)")
+    try? FileManager.default.removeItem(at: root)
+    try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+    defer { try? FileManager.default.removeItem(at: root) }
+
+    let vault = Vault(root: root)
+    _ = try vault.createFolder(named: "Work")
+    _ = try vault.createNote(title: "Report", in: "Work", body: "kept")
+    _ = try vault.createFolder(named: "Deep", in: "Work")
+    _ = try vault.createNote(title: "Nested", in: "Work/Deep", body: "also kept")
+
+    t.equal(vault.noteCount(inFolder: "Work"), 2, "a folder counts everything nested under it")
+
+    // Rename carries its contents.
+    let renamed = try vault.renameFolder("Work", to: "Projects")
+    t.equal(renamed, "Projects", "the folder is renamed")
+    t.equal(vault.folders().sorted(), ["Projects", "Projects/Deep"], "children come with it")
+    t.equal(try String(contentsOf: root.appending(path: "Projects/Report.md"), encoding: .utf8),
+            "kept", "notes survive the rename")
+    vault.reload()
+    t.equal(vault.notes.filter { $0.folder.hasPrefix("Projects") }.count, 2,
+            "and are re-indexed under the new path")
+
+    // Case-only, the same trap notes had.
+    let cased = try vault.renameFolder("Projects", to: "projects")
+    t.equal(cased, "projects", "a case-only folder rename renames rather than duplicating")
+    let top = try FileManager.default.contentsOfDirectory(atPath: root.path)
+        .filter { !$0.hasPrefix(".") }
+    t.equal(top, ["projects"], "no duplicate folder is left behind")
+
+    // Nesting.
+    _ = try vault.createFolder(named: "Archive")
+    let moved = try vault.moveFolder("projects", into: "Archive")
+    t.equal(moved, "Archive/projects", "a folder can be nested under another")
+
+    // And the move that would eat the vault.
+    var refused = false
+    do { _ = try vault.moveFolder("Archive", into: "Archive/projects") }
+    catch is Vault.FolderError { refused = true }
+    t.expect(refused, "a folder cannot be moved inside itself")
+
+    // Delete goes to the trash, so the directory leaves the vault.
+    try vault.deleteFolder("Archive")
+    t.equal(vault.folders(), [], "the folder is gone from the vault")
+}
+
 t.suite("lazy indexing") {
     let root = URL(fileURLWithPath: NSTemporaryDirectory())
         .appending(path: "milky-lazy-\(ProcessInfo.processInfo.processIdentifier)")
