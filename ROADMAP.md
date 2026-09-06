@@ -4,13 +4,9 @@
 
 ## v0.1 — Ship the Mac app
 
-`#######···` 67% · 6 of 9 done · due 2026-10-15
+`########··` 78% · 7 of 9 done · due 2026-10-15
 
 A stranger can download Milky, open it, and it does not get blocked by Gatekeeper.
-
-### in progress
-
-- [ ] `0053` The welcome screen promises iCloud we cannot honour <sup>bug · p0 · cloud · release</sup>
 
 ### blocked
 
@@ -25,6 +21,7 @@ A stranger can download Milky, open it, and it does not get blocked by Gatekeepe
 - [x] `0005` Build a release DMG from one command <sup>chore · p0 · release</sup>
 - [x] `0006` Present the appearance controls <sup>feature · p1 · editor</sup>
 - [x] `0008` Deploy the landing page <sup>chore · p1 · release</sup>
+- [x] `0053` The welcome screen promises iCloud we cannot honour <sup>bug · p0 · cloud · release</sup>
 
 ## v0.2 — Nothing is lost
 

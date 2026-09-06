@@ -2,7 +2,7 @@
 id: 53
 title: The welcome screen promises iCloud we cannot honour
 type: bug
-status: doing
+status: done
 milestone: v0.1
 assignee: Oddur Sigurdsson
 labels:
