@@ -2,7 +2,7 @@
 id: 48
 title: The watcher rebuilds the index on every git write
 type: bug
-status: doing
+status: done
 milestone: v0.2
 assignee: Oddur Sigurdsson
 labels:
