@@ -19,6 +19,7 @@ struct MilkyApp: App {
                 .onAppear {
                     delegate.model = model
                     if let vault = DevSnapshot.vaultArgument() { model.open(vault) }
+                    DevSnapshot.applySelection(model)
                     DevSnapshot.scheduleIfRequested()
                 }
         }

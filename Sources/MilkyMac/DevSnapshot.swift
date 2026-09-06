@@ -60,6 +60,23 @@ enum DevSnapshot {
         FileHandle.standardError.write("checkbox clicked: no text view\n".data(using: .utf8)!)
     }
 
+    /// `MILKY_SELECT_INDEX=n` picks the nth visible note shortly after launch, so
+    /// a test can change selection and then race it against an external change.
+    static func applySelection(_ model: AppModel) {
+        guard let raw = ProcessInfo.processInfo.environment["MILKY_SELECT_INDEX"],
+              let index = Int(raw) else { return }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+            guard index < model.visibleNotes.count else {
+                FileHandle.standardError.write("select: out of range\n".data(using: .utf8)!)
+                return
+            }
+            let note = model.visibleNotes[index]
+            model.selectedNoteID = note.id
+            model.loadDraftForSelection()
+            FileHandle.standardError.write("selected: \(note.title)\n".data(using: .utf8)!)
+        }
+    }
+
     static func scheduleIfRequested() {
         applyAppearanceOverride()
         let args = ProcessInfo.processInfo.arguments

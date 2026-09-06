@@ -107,7 +107,7 @@ private struct NoteRow: View {
                     .textRole(.rowMeta, color: filled ? Palette.onAccent.opacity(0.82) : Palette.inkSoft)
                 Text(snippet)
                     .lineLimit(1)
-                    .textRole(.rowMeta, color: filled ? Palette.onAccent.opacity(0.62) : Palette.inkFaint)
+                    .textRole(.rowMeta, color: filled ? Palette.onAccent.opacity(0.75) : Palette.inkFaint)
             }
         }
         .padding(.vertical, Space.sm)

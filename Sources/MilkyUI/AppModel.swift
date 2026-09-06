@@ -245,13 +245,22 @@ public final class AppModel: ObservableObject {
         let previousSelection = selectedNoteID
         reload { [weak self] in
             guard let self else { return }
+
+            // Only rescue the selection if it was actually lost. Reindexing is
+            // asynchronous now, so the reader can pick a different note while it
+            // is in flight — and writing the old one back leaves the list with
+            // two highlighted rows: ours on the note we reverted to, and the
+            // system's on the one they actually clicked.
+            if let current = self.selectedNoteID,
+               self.notes.contains(where: { $0.id == current }) { return }
+
             if let previousSelection, self.notes.contains(where: { $0.id == previousSelection }) {
                 self.selectedNoteID = previousSelection
             } else {
                 self.selectedNoteID = self.visibleNotes.first?.id
-                self.lastLoadedNoteID = nil
-                self.loadDraftForSelection()
             }
+            self.lastLoadedNoteID = nil
+            self.loadDraftForSelection()
         }
         refreshGitStatus()
     }
