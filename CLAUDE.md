@@ -39,6 +39,25 @@ Rendering flows one way: `MarkdownSyntax.tokenize` produces `[Token]`,
 Anything that cannot be expressed as an `NSAttributedString` attribute — rounded
 corners, drawn glyphs, rules — goes through `BlockDecoration`.
 
+## Testing
+
+Never assert on the machine's configuration. A test that reads global git config,
+`$HOME`, or an installed tool passes on a developer's Mac and fails on a runner —
+it is measuring the environment, not the code. Configure what the test needs on
+the fixture it creates.
+
+Reproduce CI locally before pushing:
+
+```sh
+HOME=$(mktemp -d) swift run milky-tests
+```
+
+That is what catches an ambient dependency; it found two, one of them latent for
+several commits.
+
+And gate a merge on checks *passing*, not on checks *finishing* — `gh pr checks`
+returning is not the same as it being green.
+
 ## Traps that have already bitten
 
 - `NSString.lineRange(for:)` and `paragraphRange(for:)` return the **last** line
