@@ -2,12 +2,13 @@
 id: 51
 title: Set a git vault up properly on init
 type: chore
-status: backlog
+status: doing
 milestone: v0.2
+assignee: Oddur Sigurdsson
 labels:
 - sync
 created: 2026-09-05
-updated: 2026-09-05
+updated: 2026-09-06
 priority: p1
 effort: s
 area: storage

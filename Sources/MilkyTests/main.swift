@@ -178,6 +178,36 @@ t.suite("vault") {
     t.expect(!vault.notes.contains { $0.relativePath.contains(".git") }, "the .git directory is skipped")
 }
 
+t.suite("git vault setup") {
+    let root = URL(fileURLWithPath: NSTemporaryDirectory())
+        .appending(path: "milky-gitseed-\(ProcessInfo.processInfo.processIdentifier)")
+    try? FileManager.default.removeItem(at: root)
+    try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+    defer { try? FileManager.default.removeItem(at: root) }
+
+    let sync = GitSync(root: root)
+    guard sync.isAvailable else {
+        t.expect(true, "git unavailable; seeding checks skipped")
+        return
+    }
+
+    try sync.initialize()
+    let ignore = try String(contentsOf: root.appending(path: ".gitignore"), encoding: .utf8)
+    let attrs = try String(contentsOf: root.appending(path: ".gitattributes"), encoding: .utf8)
+    t.expect(ignore.contains(".DS_Store"), "the ignore file keeps .DS_Store out of every commit")
+    t.expect(attrs.contains("text=auto eol=lf"), "line endings are pinned for other platforms")
+
+    // A vault that already has an opinion keeps it.
+    try "mine\n".write(to: root.appending(path: ".gitignore"), atomically: true, encoding: .utf8)
+    let written = try sync.seedFiles()
+    t.equal(written, [], "nothing is rewritten on a second pass")
+    t.equal(try String(contentsOf: root.appending(path: ".gitignore"), encoding: .utf8), "mine\n",
+            "an existing ignore file is left alone")
+
+    // The identity check is a real gate, not decoration.
+    t.expect(sync.hasIdentity, "this machine has a git identity, so init could commit")
+}
+
 t.suite("watcher filtering") {
     let vault = "/Users/x/Notes"
     t.expect(VaultWatcher.isVaultChange(in: ["\(vault)/Note.md"]), "a note change reloads")
